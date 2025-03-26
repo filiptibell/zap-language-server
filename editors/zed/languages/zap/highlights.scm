@@ -10,6 +10,9 @@
   "map"
 ] @keyword
 
+; Not keywords
+(event_type_field "type" @property)
+
 ; Operators
 "=" @operator
 "?" @operator
@@ -61,6 +64,7 @@
   "DateTimeMillis"
   "Color3"
   "BrickColor"
+  "Instance"
 ] @type.builtin
 
 ; Type declarations

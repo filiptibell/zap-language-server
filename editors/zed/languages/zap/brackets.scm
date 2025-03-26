@@ -2,6 +2,3 @@
 ("[" @open "]" @close)
 ("{" @open "}" @close)
 ("(" @open ")" @close)
-
-; String quotes
-("\"" @open "\"" @close)
