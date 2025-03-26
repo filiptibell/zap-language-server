@@ -1,0 +1,41 @@
+{
+	"name": "zap-language",
+	"displayName": "Zap Language",
+	"description": "Zap language support for VSCode",
+	"version": "0.1.0",
+	"license": "MIT",
+	"publisher": "filiptibell",
+	"author": {
+		"name": "Filip Tibell",
+		"email": "filip.tibell@gmail.com",
+		"url": "https://github.com/filiptibell/"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/filiptibell/zap-language.git"
+	},
+	"categories": [
+		"Other"
+	],
+	"contributes": {
+		"languages": [
+			{
+				"id": "zap",
+				"configuration": "./configs/zap.language-configuration.json",
+				"aliases": [
+					"Zap"
+				],
+				"extensions": [
+					"zap"
+				]
+			}
+		],
+		"grammars": [
+			{
+				"language": "zap",
+				"scopeName": "source.zap",
+				"path": "./syntaxes/zap.tmLanguage.json"
+			}
+		]
+	}
+}
