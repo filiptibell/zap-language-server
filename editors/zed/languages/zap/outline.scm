@@ -1,14 +1,13 @@
-; Type declarations
 (type_declaration
+  "type" @context
   name: (identifier) @name) @item
 
-; Event declarations
 (event_declaration
+  "event" @context
   name: (identifier) @name) @item
 
-; Function declarations
 (function_declaration
+  "funct" @context
   name: (identifier) @name) @item
 
-; Comments above declarations as annotations
-(comment) @annotation
+(doc_comment) @annotation

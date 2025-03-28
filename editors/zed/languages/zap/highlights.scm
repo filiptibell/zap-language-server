@@ -39,11 +39,6 @@
 (event_call_value) @constant  ; ManyAsync/ManySync/etc
 (function_call_value) @constant  ; Async/Sync
 
-[
-  "true"
-  "false"
-] @boolean
-
 ; Types
 [
   "string"
@@ -67,9 +62,21 @@
   "Instance"
 ] @type.builtin
 
-; Type declarations
+; Options and Variables
+(option_declaration
+(option_name) @variable)
+
+(identifier) @variable
+
+; Declarations
 (type_declaration
   name: (identifier) @type)
+
+(event_declaration
+  name: (identifier) @function)
+
+(function_declaration
+  name: (identifier) @function)
 
 ; Fields and Properties
 (struct_field
@@ -79,23 +86,19 @@
   name: (identifier) @property)
 
 (enum_variant
-  name: (identifier) @type)
-
-; Options
-(option_declaration
-  (option_name) @constant.builtin)
-
-; Variables
-(identifier) @variable
+  name: (identifier) @enum.variant)
 
 ; Literals
+["true" "false"] @boolean
+(boolean) @boolean
 (number) @number
 (string) @string
 
 ; Comments
 (comment) @comment
+(doc_comment) @comment.doc
 
-; Special syntax
+; Ranges
 (range
   (inclusive_range) @operator)
 (range

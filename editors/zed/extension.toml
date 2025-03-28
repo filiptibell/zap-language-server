@@ -8,4 +8,4 @@ repository = "https://github.com/filiptibell/zap-language"
 
 [grammars.zap]
 repository = "https://github.com/filiptibell/tree-sitter-zap"
-rev = "101e1dfc9185e764cc7b6725955b5b49a70cebd0"
+rev = "4d505590ec1255701d047a8cd152e107ae5bcd40"
