@@ -1,0 +1,27 @@
+[workspace]
+resolver = "2"
+default-members = ["crates/server"]
+members = ["crates/server", "crates/lsp"]
+
+[profile.release]
+opt-level = "z"
+strip = true
+lto = true
+
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+publish = false
+license = "MIT"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -3 }
+cargo = { level = "warn", priority = -2 }
+pedantic = { level = "warn", priority = -1 }
+
+cargo_common_metadata = { level = "allow", priority = 1 }
+module_inception = { level = "allow", priority = 1 }
+module_name_repetitions = { level = "allow", priority = 1 }
+multiple_crate_versions = { level = "allow", priority = 1 }
+similar_names = { level = "allow", priority = 1 }
+unnecessary_wraps = { level = "allow", priority = 1 }
