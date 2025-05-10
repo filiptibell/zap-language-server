@@ -12,3 +12,9 @@ path = "src/lib.rs"
 workspace = true
 
 [dependencies]
+async-lsp = { version = "0.2.2", default-features = false, features = ["client-monitor", "omni-trait", "tracing"] }
+futures = "0.3"
+ropey = "1.6"
+thiserror = "2.0"
+tokio = { version = "1.45", features = ["full"] }
+tower = "0.5"
