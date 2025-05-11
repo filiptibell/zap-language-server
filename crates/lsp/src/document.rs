@@ -7,6 +7,9 @@ use ropey::Rope;
     A document tracked by the language server, containing
     the URL, text, and language identifier of the document.
 
+    May be cloned somewhat cheaply to take a snapshot
+    of the current state of the document.
+
     Not meant to be updated by external sources, only read,
     since the language server should be responsible for
     always keeping the document up-to-date when edits occur.
