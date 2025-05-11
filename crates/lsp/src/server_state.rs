@@ -1,62 +1,71 @@
-use std::collections::HashMap;
-use std::io;
-use std::ops::ControlFlow;
+#![allow(clippy::needless_pass_by_value)]
 
-use futures::future::BoxFuture;
+use std::{io, ops::ControlFlow, sync::Arc};
+
+use dashmap::{DashMap, mapref::one::Ref};
 use ropey::Rope;
 
 use async_lsp::{
-    Error, LanguageServer, ResponseError, Result,
+    ClientSocket, Error, Result,
     lsp_types::{
-        DidChangeTextDocumentParams, DidOpenTextDocumentParams, DidSaveTextDocumentParams,
-        InitializeParams, InitializeResult, PositionEncodingKind, TextDocumentSyncCapability,
-        TextDocumentSyncKind, Url,
+        DidChangeTextDocumentParams, DidOpenTextDocumentParams, DidSaveTextDocumentParams, Url,
     },
 };
 
-use crate::{document::Document, server_trait::Server};
+use crate::document::Document;
 
 /**
-    The low-level language server implementation that automatically
-    manages documents and forwards requests to the underlying server.
+    Managed state for an LSP server.
 
-    Supports incremental updates of documents where possible, falling
-    back to other implementations whenever incremental updates fail.
+    Provides access to and automatically tracks the connected
+    client, as well as opened documents and their changes.
 */
-pub(crate) struct LanguageServerWithDocuments<T: Server> {
-    server: T,
-    documents: HashMap<Url, Document>,
+#[derive(Debug, Clone)]
+pub struct ServerState {
+    client: Arc<ClientSocket>,
+    documents: Arc<DashMap<Url, Document>>,
 }
 
-impl<T: Server> LanguageServerWithDocuments<T> {
-    pub(crate) fn new(server: T) -> Self {
-        let documents = HashMap::new();
-        Self { server, documents }
+impl ServerState {
+    /**
+        Gets a reference to the client connected to the server.
+
+        Can be used to send requests and notifications to the client.
+    */
+    #[must_use]
+    pub fn client(&self) -> &ClientSocket {
+        &self.client
+    }
+
+    /**
+        Gets a reference to a document by its URL.
+
+        This reference should preferrably be held for only
+        as short of a duration as possible - while holding
+        the reference, the document at this URL will not
+        be able to be modified by saving or editing it.
+
+        Returns `None` if the document is not found.
+    */
+    #[must_use]
+    pub fn document(&self, url: &Url) -> Option<Ref<Url, Document>> {
+        self.documents.get(url)
     }
 }
 
-impl<T: Server> LanguageServer for LanguageServerWithDocuments<T> {
-    type Error = ResponseError;
-    type NotifyResult = ControlFlow<async_lsp::Result<()>>;
+// Private implementation
 
-    fn initialize(
+impl ServerState {
+    pub(crate) fn new(client: ClientSocket) -> Self {
+        let client = Arc::new(client);
+        let documents = Arc::new(DashMap::new());
+        Self { client, documents }
+    }
+
+    pub(crate) fn handle_document_open(
         &mut self,
-        params: InitializeParams,
-    ) -> BoxFuture<'static, Result<InitializeResult, Self::Error>> {
-        let mut result = InitializeResult {
-            server_info: T::server_info(),
-            capabilities: T::server_capabilities(params.capabilities).unwrap_or_default(),
-        };
-
-        result.capabilities.position_encoding = Some(PositionEncodingKind::UTF32);
-        result.capabilities.text_document_sync = Some(TextDocumentSyncCapability::Kind(
-            TextDocumentSyncKind::INCREMENTAL,
-        ));
-
-        Box::pin(async move { Ok(result) })
-    }
-
-    fn did_open(&mut self, params: DidOpenTextDocumentParams) -> ControlFlow<Result<()>> {
+        params: DidOpenTextDocumentParams,
+    ) -> ControlFlow<Result<()>> {
         self.documents.insert(
             params.text_document.uri.clone(),
             Document {
@@ -69,8 +78,11 @@ impl<T: Server> LanguageServer for LanguageServerWithDocuments<T> {
         ControlFlow::Continue(())
     }
 
-    fn did_change(&mut self, params: DidChangeTextDocumentParams) -> ControlFlow<Result<()>> {
-        let Some(doc) = self.documents.get_mut(&params.text_document.uri) else {
+    pub(crate) fn handle_document_change(
+        &mut self,
+        params: DidChangeTextDocumentParams,
+    ) -> ControlFlow<Result<()>> {
+        let Some(mut doc) = self.documents.get_mut(&params.text_document.uri) else {
             return ControlFlow::Continue(());
         };
 
@@ -115,8 +127,11 @@ impl<T: Server> LanguageServer for LanguageServerWithDocuments<T> {
         ControlFlow::Continue(())
     }
 
-    fn did_save(&mut self, params: DidSaveTextDocumentParams) -> ControlFlow<Result<()>> {
-        let Some(doc) = self.documents.get_mut(&params.text_document.uri) else {
+    pub(crate) fn handle_document_save(
+        &self,
+        params: DidSaveTextDocumentParams,
+    ) -> ControlFlow<Result<()>> {
+        let Some(mut doc) = self.documents.get_mut(&params.text_document.uri) else {
             return error_to_control_break(format!(
                 "Document {} not found",
                 params.text_document.uri
