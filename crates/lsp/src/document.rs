@@ -1,10 +1,16 @@
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::items_after_statements)]
+
 use std::io::{Read, Result, Write};
 
 use async_lsp::lsp_types::Url;
 use ropey::Rope;
 
 #[cfg(feature = "tree-sitter")]
-use tree_sitter::{Language, Parser, Tree};
+use async_lsp::lsp_types::{Position, Range};
+
+#[cfg(feature = "tree-sitter")]
+use tree_sitter::{Language, Tree};
 
 /**
     A document tracked by the language server, containing
@@ -111,30 +117,73 @@ impl Document {
     pub fn language(&self) -> &str {
         &self.language
     }
+}
 
-    #[cfg(feature = "tree-sitter")]
+#[cfg(feature = "tree-sitter")]
+impl Document {
     /**
-        Creates a parser with the tree-sitter language
-        for the document pre-assigned to it.
+        Returns `true` if the document has an assigned tree-sitter language, otherwise `false`.
     */
     #[must_use]
-    pub(crate) fn parser(&self) -> Option<Parser> {
-        let lang = self.tree_sitter_lang.clone()?;
-        let mut parser = Parser::new();
-        if parser.set_language(&lang).is_ok() {
-            Some(parser)
-        } else {
-            None
-        }
+    pub fn has_syntax_language(&self) -> bool {
+        self.tree_sitter_lang.is_some()
     }
 
-    #[cfg(feature = "tree-sitter")]
     /**
-        Returns the parsed tree for the document, if any.
+        Returns `true` if the document has a parsed tree-sitter syntax tree, otherwise `false`.
     */
     #[must_use]
-    pub fn tree(&self) -> Option<&Tree> {
-        self.tree_sitter_tree.as_ref()
+    pub fn has_syntax_tree(&self) -> bool {
+        self.tree_sitter_tree.is_some()
+    }
+
+    /**
+        Creates and runs a query for the given query string.
+
+        Returns `Some(captures)` if the query was successful, otherwise `None`.
+    */
+    #[must_use]
+    pub fn query(&self, query: impl AsRef<str>) -> Option<Vec<DocumentQueryCapture>> {
+        use tree_sitter::{Node, Point, Query, QueryCursor, StreamingIterator};
+
+        let lang = self.tree_sitter_lang.as_ref()?;
+        let tree = self.tree_sitter_tree.as_ref()?;
+
+        let query = Query::new(lang, query.as_ref()).ok()?;
+        let query_names = query.capture_names();
+
+        let doc_text = self.text.to_string();
+        let doc_bytes = doc_text.as_bytes();
+
+        let mut cursor = QueryCursor::new();
+        let mut it = cursor.matches(&query, tree.root_node(), doc_bytes);
+
+        fn point_to_position(point: Point) -> Position {
+            Position {
+                line: point.row as u32,
+                character: point.column as u32,
+            }
+        }
+
+        fn range_from_node(node: &Node) -> Range {
+            Range {
+                start: point_to_position(node.start_position()),
+                end: point_to_position(node.end_position()),
+            }
+        }
+
+        let mut items = Vec::new();
+        while let Some(matched) = it.next() {
+            for capture in matched.captures {
+                if let Ok(text) = capture.node.utf8_text(doc_bytes) {
+                    let name = query_names[capture.index as usize].to_string();
+                    let text = text.to_string();
+                    let range = range_from_node(&capture.node);
+                    items.push(DocumentQueryCapture { name, text, range });
+                }
+            }
+        }
+        Some(items)
     }
 }
 
@@ -154,4 +203,20 @@ impl Read for DocumentReader<'_> {
             _ => Ok(0),
         }
     }
+}
+
+#[cfg(feature = "tree-sitter")]
+/**
+    A capture from a tree-sitter query on a document.
+
+    Created by calling [`Document::query`].
+*/
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DocumentQueryCapture {
+    /// The capture name
+    pub name: String,
+    /// The textual contents of the capture
+    pub text: String,
+    /// The document range of the capture
+    pub range: Range,
 }

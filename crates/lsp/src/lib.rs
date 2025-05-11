@@ -18,4 +18,7 @@ pub mod server {
     pub use crate::server_state::ServerState;
     pub use crate::server_trait::Server;
     pub use crate::transport::Transport;
+
+    #[cfg(feature = "tree-sitter")]
+    pub use crate::document::DocumentQueryCapture;
 }

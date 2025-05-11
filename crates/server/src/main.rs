@@ -24,14 +24,14 @@ impl Server for ZapLanguageServer {
             return Ok(None);
         };
 
-        let Some(_tree) = doc.tree() else {
-            return Ok(None);
-        };
-
         Ok(Some(Hover {
             range: None,
             contents: HoverContents::Scalar(MarkedString::String(String::from(
-                "Hello, zap language server!",
+                if doc.has_syntax_tree() {
+                    "Hello, zap language server! Syntax tree is available!"
+                } else {
+                    "Hello, zap language server! No syntax tree available :("
+                },
             ))),
         }))
     }

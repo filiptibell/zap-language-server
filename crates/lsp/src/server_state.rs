@@ -229,7 +229,7 @@ impl ServerState {
         #[cfg(feature = "tree-sitter")]
         if !incremental_update_failed {
             if let Some(tree) = doc.tree_sitter_tree.as_ref() {
-                let mut parser = doc.parser().expect("has tree - must have parser");
+                let mut parser = doc_parser(&doc).expect("has tree - must have parser");
                 let updated_tree = parser.parse(doc.text_contents(), Some(tree));
                 doc.tree_sitter_tree = updated_tree;
             }
@@ -300,5 +300,16 @@ impl ServerState {
         }
 
         ControlFlow::Continue(())
+    }
+}
+
+#[cfg(feature = "tree-sitter")]
+fn doc_parser(doc: &Document) -> Option<Parser> {
+    let lang = doc.tree_sitter_lang.as_ref()?;
+    let mut parser = Parser::new();
+    if parser.set_language(lang).is_ok() {
+        Some(parser)
+    } else {
+        None
     }
 }
