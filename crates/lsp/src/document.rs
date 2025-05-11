@@ -1,9 +1,11 @@
+use std::io::{Read, Result, Write};
+
 use async_lsp::lsp_types::Url;
 use ropey::Rope;
 
 /**
     A document tracked by the language server, containing
-    the URL, text, and language of the document.
+    the URL, text, and language identifier of the document.
 
     Not meant to be updated by external sources, only read,
     since the language server should be responsible for
@@ -38,10 +40,60 @@ impl Document {
     }
 
     /**
-        Returns the language of the document.
+        Returns a reader over the full text in the document.
+    */
+    #[must_use]
+    pub fn text_reader(&self) -> DocumentReader {
+        DocumentReader {
+            chunks: self.text.chunks(),
+        }
+    }
+
+    /**
+        Returns the full text of the document, as a string.
+
+        When possible, prefer [`Document::text_reader`]
+        for improved performance and less allocations.
+    */
+    #[must_use]
+    pub fn text_contents(&self) -> String {
+        self.text.to_string()
+    }
+
+    /**
+        Returns the full text of the document, as a string.
+
+        When possible, prefer [`Document::text_reader`]
+        for improved performance and less allocations.
+    */
+    #[must_use]
+    pub fn text_bytes(&self) -> Vec<u8> {
+        self.text.bytes().collect()
+    }
+
+    /**
+        Returns the language identifier of the document.
     */
     #[must_use]
     pub fn lang(&self) -> &str {
         &self.lang
+    }
+}
+
+/**
+    A reader over the full text contents of a document.
+
+    Created by calling [`Document::text_reader`].
+*/
+pub struct DocumentReader<'d> {
+    chunks: ropey::iter::Chunks<'d>,
+}
+
+impl Read for DocumentReader<'_> {
+    fn read(&mut self, mut buf: &mut [u8]) -> Result<usize> {
+        match self.chunks.next() {
+            Some(chunk) => buf.write(chunk.as_bytes()),
+            _ => Ok(0),
+        }
     }
 }
