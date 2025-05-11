@@ -1,12 +1,12 @@
 #![allow(clippy::needless_pass_by_value)]
 
-use std::{io, ops::ControlFlow, sync::Arc};
+use std::{ops::ControlFlow, sync::Arc};
 
 use dashmap::DashMap;
 use ropey::Rope;
 
 use async_lsp::{
-    ClientSocket, Error, Result,
+    ClientSocket, Result,
     lsp_types::{
         DidChangeTextDocumentParams, DidOpenTextDocumentParams, DidSaveTextDocumentParams, Url,
     },
@@ -121,9 +121,12 @@ impl ServerState {
 
         doc.version = params.text_document.version;
 
+        // Try to perform an incremental update on the document contents, using the changes
+        let mut incremental_update_successful = true;
         for change in params.content_changes {
             let Some(range) = change.range else { continue };
 
+            // Try to find the character indices where the change starts and ends
             let start_idx = doc
                 .text
                 .try_line_to_char(range.start.line as usize)
@@ -140,23 +143,62 @@ impl ServerState {
                     }
                 });
 
+            // Try to incrementally update, or exit early if it fails
             match (start_idx, end_idx) {
                 (Ok(start_idx), Err(_)) => {
-                    result_to_control_flow(doc.text.try_remove(start_idx..))?;
-                    result_to_control_flow(doc.text.try_insert(start_idx, &change.text))?;
+                    if doc.text.try_remove(start_idx..).is_err()
+                        || doc.text.try_insert(start_idx, &change.text).is_err()
+                    {
+                        incremental_update_successful = false;
+                        break;
+                    }
                 }
                 (Ok(start_idx), Ok(end_idx)) => {
-                    result_to_control_flow(doc.text.try_remove(start_idx..end_idx))?;
-                    result_to_control_flow(doc.text.try_insert(start_idx, &change.text))?;
+                    if doc.text.try_remove(start_idx..end_idx).is_err()
+                        || doc.text.try_insert(start_idx, &change.text).is_err()
+                    {
+                        incremental_update_successful = false;
+                        break;
+                    }
                 }
                 (Err(_), _) => {
-                    self.insert_document::<T>(
-                        doc.uri.clone(),
-                        change.text,
-                        doc.version,
-                        doc.language.clone(),
-                    );
+                    incremental_update_successful = false;
+                    break;
                 }
+            }
+
+            // Perform incremental update on the syntax tree as well, if enabled
+            #[cfg(feature = "tree-sitter")]
+            if let Some(tree) = doc.tree_sitter_tree.as_mut() {}
+        }
+
+        // If the incremental update was successful, and we applied edits to the syntax
+        // tree, we must finalize those changes by parsing using tree-sitter once again
+        #[cfg(feature = "tree-sitter")]
+        if incremental_update_successful {
+            if let Some(tree) = doc.tree_sitter_tree.as_ref() {
+                let mut parser = doc.parser().expect("has tree - must have parser");
+                let updated_tree = parser.parse(doc.text_contents(), Some(tree));
+                doc.tree_sitter_tree = updated_tree;
+            }
+        }
+
+        // If the incremental update failed, we will re-insert the entire file instead
+        // Note that we must first drop the document reference to prevent a deadlock
+        if !incremental_update_successful {
+            let uri = doc.uri.clone();
+            let version = doc.version();
+            let language = doc.language.clone();
+
+            drop(doc);
+
+            // NOTE: We must read the contents of the file synchronously
+            // as the fallback here, since notification handlers are actually
+            // synchronous both according to LSP spec and the async-lsp crate
+            if let Ok(text) = std::fs::read_to_string(uri.path()) {
+                self.insert_document::<T>(uri, text, version, language);
+            } else {
+                self.documents.remove(&uri);
             }
         }
 
@@ -168,30 +210,23 @@ impl ServerState {
         params: DidSaveTextDocumentParams,
     ) -> ControlFlow<Result<()>> {
         let Some(mut doc) = self.documents.get_mut(&params.text_document.uri) else {
-            return error_to_control_break(format!(
-                "Document {} not found",
-                params.text_document.uri
-            ));
+            return ControlFlow::Continue(());
         };
 
-        // NOTE: We must unfortunately read the contents of the file
-        // synchronously in the fallback here, since async-lsp will
-        // not allow us to use async code in notification handlers
+        // NOTE: We must read the contents of the file synchronously
+        // as the fallback here, since notification handlers are actually
+        // synchronous both according to LSP spec and the async-lsp crate
         doc.text = if let Some(text) = &params.text {
             Rope::from_str(text)
+        } else if let Ok(text) = std::fs::read_to_string(params.text_document.uri.path()) {
+            Rope::from_str(&text)
         } else {
-            let file = match std::fs::File::open(params.text_document.uri.path()) {
-                Ok(file) => file,
-                Err(err) => return error_to_control_break(err),
-            };
-            match Rope::from_reader(file) {
-                Ok(rope) => rope,
-                Err(err) => return error_to_control_break(err),
-            }
+            self.documents.remove(&params.text_document.uri);
+            return ControlFlow::Continue(());
         };
 
         // Since we just read the entire file contents, we will also
-        // re-compute the entire tree-sitter tree from those new contents
+        // re-create the entire tree-sitter tree using those new contents
         #[cfg(feature = "tree-sitter")]
         {
             let mut tree_sitter_lang = T::determine_tree_sitter_language(doc.url(), doc.language());
@@ -214,21 +249,4 @@ impl ServerState {
 
         ControlFlow::Continue(())
     }
-}
-
-fn result_to_control_flow<E>(result: Result<(), E>) -> ControlFlow<Result<()>>
-where
-    E: Into<Box<dyn std::error::Error + Send + Sync>>,
-{
-    match result {
-        Ok(()) => ControlFlow::Continue(()),
-        Err(err) => error_to_control_break(err),
-    }
-}
-
-fn error_to_control_break<E>(err: E) -> ControlFlow<Result<()>>
-where
-    E: Into<Box<dyn std::error::Error + Send + Sync>>,
-{
-    ControlFlow::Break(Err(Error::Io(io::Error::new(io::ErrorKind::Other, err))))
 }

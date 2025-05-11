@@ -4,7 +4,7 @@ use async_lsp::lsp_types::Url;
 use ropey::Rope;
 
 #[cfg(feature = "tree-sitter")]
-use tree_sitter::{Language, Tree};
+use tree_sitter::{Language, Parser, Tree};
 
 /**
     A document tracked by the language server, containing
@@ -110,6 +110,21 @@ impl Document {
     #[must_use]
     pub fn language(&self) -> &str {
         &self.language
+    }
+
+    /**
+        Creates a parser with the tree-sitter language
+        for the document pre-assigned to it.
+    */
+    #[must_use]
+    pub(crate) fn parser(&self) -> Option<Parser> {
+        let lang = self.tree_sitter_lang.clone()?;
+        let mut parser = Parser::new();
+        if parser.set_language(&lang).is_ok() {
+            Some(parser)
+        } else {
+            None
+        }
     }
 
     /**
