@@ -112,6 +112,7 @@ impl Document {
         &self.language
     }
 
+    #[cfg(feature = "tree-sitter")]
     /**
         Creates a parser with the tree-sitter language
         for the document pre-assigned to it.
@@ -127,6 +128,7 @@ impl Document {
         }
     }
 
+    #[cfg(feature = "tree-sitter")]
     /**
         Returns the parsed tree for the document, if any.
     */

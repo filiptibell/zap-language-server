@@ -1,4 +1,5 @@
 #![allow(clippy::needless_pass_by_value)]
+#![allow(clippy::too_many_lines)]
 
 use std::{ops::ControlFlow, sync::Arc};
 
@@ -13,7 +14,7 @@ use async_lsp::{
 };
 
 #[cfg(feature = "tree-sitter")]
-use tree_sitter::Parser;
+use tree_sitter::{InputEdit, Parser, Point};
 
 use crate::{document::Document, server::Server};
 
@@ -126,50 +127,101 @@ impl ServerState {
         for change in params.content_changes {
             let Some(range) = change.range else { continue };
 
-            // Try to find the character indices where the change starts and ends
-            let start_idx = doc
-                .text
-                .try_line_to_char(range.start.line as usize)
-                .map(|idx| idx + range.start.character as usize);
-            let end_idx = doc
+            // First, try to get the starting character index,
+            // since without it, we can't incrementally update
+            let start_char = if let Ok(lchar) = doc.text.try_line_to_char(range.start.line as usize)
+            {
+                lchar + range.start.character as usize
+            } else {
+                incremental_update_failed = true;
+                break;
+            };
+
+            // Try to get the ending character index - if it fails, we will
+            // consider the change as extending to the end of the document
+            let end_char = doc
                 .text
                 .try_line_to_char(range.end.line as usize)
-                .map(|idx| idx + range.end.character as usize)
+                .map(|lchar| lchar + range.end.character as usize)
                 .and_then(|c| {
                     if c > doc.text.len_chars() {
                         Err(ropey::Error::CharIndexOutOfBounds(c, doc.text.len_chars()))
                     } else {
                         Ok(c)
                     }
-                });
+                })
+                .ok();
 
-            // Try to incrementally update, or exit early if it fails
-            match (start_idx, end_idx) {
-                (Ok(start_idx), Err(_)) => {
-                    if doc.text.try_remove(start_idx..).is_err()
-                        || doc.text.try_insert(start_idx, &change.text).is_err()
-                    {
-                        incremental_update_failed = true;
-                        break;
+            // Perform incremental edit on the syntax tree as well, if enabled
+            // Note that we need to do this before updating the document contents
+            #[cfg(feature = "tree-sitter")]
+            if doc.tree_sitter_tree.is_some() {
+                // Compute some byte offsets based on the yet-to-be-changed rope
+                let start_byte = doc.text.char_to_byte(start_char);
+                let old_end_byte = doc
+                    .text
+                    .char_to_byte(end_char.unwrap_or_else(|| doc.text.len_chars()));
+                let new_end_byte = start_byte + change.text.len();
+
+                // Compute the new end point based on the contents of the edit
+                let (new_end_row, new_end_col) = change.text.chars().fold(
+                    (range.start.line as usize, range.start.character as usize),
+                    |(row, col), ch| {
+                        if ch == '\n' {
+                            (row + 1, 0)
+                        } else {
+                            (row, col + 1)
+                        }
+                    },
+                );
+
+                // Old end position will be either the LSP `range.end`
+                // or the last character that already existed in the rope
+                let old_end_position = if end_char.is_some() {
+                    Point {
+                        row: range.end.line as usize,
+                        column: range.end.character as usize,
                     }
-                }
-                (Ok(start_idx), Ok(end_idx)) => {
-                    if doc.text.try_remove(start_idx..end_idx).is_err()
-                        || doc.text.try_insert(start_idx, &change.text).is_err()
-                    {
-                        incremental_update_failed = true;
-                        break;
+                } else {
+                    let last_row = doc.text.len_lines() - 1;
+                    let last_col = doc.text.line(last_row).len_chars();
+                    Point {
+                        row: last_row,
+                        column: last_col,
                     }
-                }
-                (Err(_), _) => {
+                };
+
+                // Finally, apply the edit to incrementally update the syntax tree
+                doc.tree_sitter_tree.as_mut().unwrap().edit(&InputEdit {
+                    start_byte,
+                    old_end_byte,
+                    new_end_byte,
+                    start_position: Point {
+                        row: range.start.line as usize,
+                        column: range.start.character as usize,
+                    },
+                    old_end_position,
+                    new_end_position: Point {
+                        row: new_end_row,
+                        column: new_end_col,
+                    },
+                });
+            }
+
+            // Try to incrementally update the document contents
+            if let Some(end_char) = end_char {
+                if doc.text.try_remove(start_char..end_char).is_err()
+                    || doc.text.try_insert(start_char, &change.text).is_err()
+                {
                     incremental_update_failed = true;
                     break;
                 }
+            } else if doc.text.try_remove(start_char..).is_err()
+                || doc.text.try_insert(start_char, &change.text).is_err()
+            {
+                incremental_update_failed = true;
+                break;
             }
-
-            // Perform incremental edit on the syntax tree as well, if enabled
-            #[cfg(feature = "tree-sitter")]
-            if let Some(tree) = doc.tree_sitter_tree.as_mut() {}
         }
 
         // If the incremental update was successful, and we applied edits to the syntax
