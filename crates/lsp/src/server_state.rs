@@ -69,7 +69,7 @@ impl ServerState {
         self.documents.insert(
             params.text_document.uri.clone(),
             Document {
-                uri: params.text_document.uri.clone(),
+                uri: params.text_document.uri,
                 text: Rope::from(params.text_document.text),
                 lang: params.text_document.language_id,
             },
@@ -86,7 +86,7 @@ impl ServerState {
             return ControlFlow::Continue(());
         };
 
-        for change in params.clone().content_changes {
+        for change in params.content_changes {
             let Some(range) = change.range else { continue };
 
             let start_idx = doc
