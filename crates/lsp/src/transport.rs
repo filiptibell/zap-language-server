@@ -17,7 +17,7 @@ use tokio::{
     },
 };
 
-use crate::{ServerError, ServerResult};
+use crate::result::{ServerError, ServerResult};
 
 /**
     Transport implementation for sockets and stdio.

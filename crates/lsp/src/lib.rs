@@ -8,9 +8,11 @@ mod transport;
 
 pub use async_lsp::lsp_types;
 
-pub use self::document::{Document, DocumentReader};
-pub use self::result::{ServerError, ServerErrorCode, ServerResult};
-pub use self::serve::serve;
-pub use self::server_state::ServerState;
-pub use self::server_trait::Server;
-pub use self::transport::Transport;
+pub mod server {
+    pub use crate::document::{Document, DocumentReader};
+    pub use crate::result::{ServerError, ServerErrorCode, ServerResult};
+    pub use crate::serve::serve;
+    pub use crate::server_state::ServerState;
+    pub use crate::server_trait::Server;
+    pub use crate::transport::Transport;
+}

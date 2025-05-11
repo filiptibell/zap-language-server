@@ -1,9 +1,8 @@
 #![allow(clippy::missing_panics_doc)]
 
 use async_lsp_boilerplate::{
-    Server, ServerResult, ServerState, Transport,
     lsp_types::{Hover, HoverContents, HoverParams, MarkedString},
-    serve,
+    server::{Server, ServerResult, ServerState, Transport, serve},
 };
 
 #[derive(Debug, Clone)]
