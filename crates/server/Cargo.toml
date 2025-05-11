@@ -13,3 +13,5 @@ workspace = true
 
 [dependencies]
 async-lsp-boilerplate = { path = "../lsp" }
+
+tokio = { version = "1.45", features = ["full"] }

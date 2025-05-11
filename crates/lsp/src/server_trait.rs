@@ -42,7 +42,7 @@ pub trait Server {
         &self,
         state: ServerState,
         params: HoverParams,
-    ) -> impl Future<Output = ServerResult<Option<Hover>>> + Send + 'static {
+    ) -> impl Future<Output = ServerResult<Option<Hover>>> + Send {
         method_not_implemented("hover")
     }
 
@@ -50,7 +50,7 @@ pub trait Server {
         &self,
         state: ServerState,
         params: CompletionParams,
-    ) -> impl Future<Output = ServerResult<Option<CompletionResponse>>> + Send + 'static {
+    ) -> impl Future<Output = ServerResult<Option<CompletionResponse>>> + Send {
         method_not_implemented("completion")
     }
 
@@ -58,7 +58,7 @@ pub trait Server {
         &self,
         state: ServerState,
         item: CompletionItem,
-    ) -> impl Future<Output = ServerResult<CompletionItem>> + Send + 'static {
+    ) -> impl Future<Output = ServerResult<CompletionItem>> + Send {
         async move { Ok(item) }
     }
 
@@ -66,7 +66,7 @@ pub trait Server {
         &self,
         state: ServerState,
         params: CodeActionParams,
-    ) -> impl Future<Output = ServerResult<Option<CodeActionResponse>>> + Send + 'static {
+    ) -> impl Future<Output = ServerResult<Option<CodeActionResponse>>> + Send {
         method_not_implemented("code_action")
     }
 
@@ -74,7 +74,7 @@ pub trait Server {
         &self,
         state: ServerState,
         action: CodeAction,
-    ) -> impl Future<Output = ServerResult<CodeAction>> + Send + 'static {
+    ) -> impl Future<Output = ServerResult<CodeAction>> + Send {
         async move { Ok(action) }
     }
 
@@ -84,7 +84,7 @@ pub trait Server {
         &self,
         state: ServerState,
         params: GotoDefinitionParams,
-    ) -> impl Future<Output = ServerResult<Option<GotoDefinitionResponse>>> + Send + 'static {
+    ) -> impl Future<Output = ServerResult<Option<GotoDefinitionResponse>>> + Send {
         method_not_implemented("definition")
     }
 
@@ -92,7 +92,7 @@ pub trait Server {
         &self,
         state: ServerState,
         params: ReferenceParams,
-    ) -> impl Future<Output = ServerResult<Option<Vec<Location>>>> + Send + 'static {
+    ) -> impl Future<Output = ServerResult<Option<Vec<Location>>>> + Send {
         method_not_implemented("references")
     }
 
@@ -100,7 +100,7 @@ pub trait Server {
         &self,
         state: ServerState,
         params: RenameParams,
-    ) -> impl Future<Output = ServerResult<Option<WorkspaceEdit>>> + Send + 'static {
+    ) -> impl Future<Output = ServerResult<Option<WorkspaceEdit>>> + Send {
         method_not_implemented("rename")
     }
 
@@ -108,7 +108,7 @@ pub trait Server {
         &self,
         state: ServerState,
         params: TextDocumentPositionParams,
-    ) -> impl Future<Output = ServerResult<Option<PrepareRenameResponse>>> + Send + 'static {
+    ) -> impl Future<Output = ServerResult<Option<PrepareRenameResponse>>> + Send {
         method_not_implemented("rename_prepare")
     }
 }
