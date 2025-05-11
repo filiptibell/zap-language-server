@@ -122,7 +122,7 @@ impl ServerState {
         doc.version = params.text_document.version;
 
         // Try to perform an incremental update on the document contents, using the changes
-        let mut incremental_update_successful = true;
+        let mut incremental_update_failed = false;
         for change in params.content_changes {
             let Some(range) = change.range else { continue };
 
@@ -149,7 +149,7 @@ impl ServerState {
                     if doc.text.try_remove(start_idx..).is_err()
                         || doc.text.try_insert(start_idx, &change.text).is_err()
                     {
-                        incremental_update_successful = false;
+                        incremental_update_failed = true;
                         break;
                     }
                 }
@@ -157,17 +157,17 @@ impl ServerState {
                     if doc.text.try_remove(start_idx..end_idx).is_err()
                         || doc.text.try_insert(start_idx, &change.text).is_err()
                     {
-                        incremental_update_successful = false;
+                        incremental_update_failed = true;
                         break;
                     }
                 }
                 (Err(_), _) => {
-                    incremental_update_successful = false;
+                    incremental_update_failed = true;
                     break;
                 }
             }
 
-            // Perform incremental update on the syntax tree as well, if enabled
+            // Perform incremental edit on the syntax tree as well, if enabled
             #[cfg(feature = "tree-sitter")]
             if let Some(tree) = doc.tree_sitter_tree.as_mut() {}
         }
@@ -175,7 +175,7 @@ impl ServerState {
         // If the incremental update was successful, and we applied edits to the syntax
         // tree, we must finalize those changes by parsing using tree-sitter once again
         #[cfg(feature = "tree-sitter")]
-        if incremental_update_successful {
+        if !incremental_update_failed {
             if let Some(tree) = doc.tree_sitter_tree.as_ref() {
                 let mut parser = doc.parser().expect("has tree - must have parser");
                 let updated_tree = parser.parse(doc.text_contents(), Some(tree));
@@ -185,7 +185,7 @@ impl ServerState {
 
         // If the incremental update failed, we will re-insert the entire file instead
         // Note that we must first drop the document reference to prevent a deadlock
-        if !incremental_update_successful {
+        if incremental_update_failed {
             let uri = doc.uri.clone();
             let version = doc.version();
             let language = doc.language.clone();
