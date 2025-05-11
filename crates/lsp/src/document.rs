@@ -3,6 +3,9 @@ use std::io::{Read, Result, Write};
 use async_lsp::lsp_types::Url;
 use ropey::Rope;
 
+#[cfg(feature = "tree-sitter")]
+use tree_sitter::{Language, Tree};
+
 /**
     A document tracked by the language server, containing
     the URL, text, version, and language of the document.
@@ -13,6 +16,16 @@ use ropey::Rope;
     Not meant to be updated by external sources, only read,
     since the language server should be responsible for
     always keeping the document up-to-date when edits occur.
+
+    # `tree-sitter`
+
+    With the `tree-sitter` crate feature enabled, the document
+    may also optionally store a [`tree_sitter::Language`] and
+    a parsed [`tree_sitter::Tree`] for the document's text.
+
+    If a `tree-sitter` language has been associated with the
+    document, the respective tree will be parsed using the initial
+    contents, and incrementally updated thereafter, transparently.
 */
 #[derive(Debug, Clone)]
 pub struct Document {
@@ -20,6 +33,10 @@ pub struct Document {
     pub(crate) text: Rope,
     pub(crate) version: i32,
     pub(crate) language: String,
+    #[cfg(feature = "tree-sitter")]
+    pub(crate) tree_sitter_lang: Option<Language>,
+    #[cfg(feature = "tree-sitter")]
+    pub(crate) tree_sitter_tree: Option<Tree>,
 }
 
 impl Document {
@@ -93,6 +110,14 @@ impl Document {
     #[must_use]
     pub fn language(&self) -> &str {
         &self.language
+    }
+
+    /**
+        Returns the parsed tree for the document, if any.
+    */
+    #[must_use]
+    pub fn tree(&self) -> Option<&Tree> {
+        self.tree_sitter_tree.as_ref()
     }
 }
 

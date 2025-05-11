@@ -12,6 +12,8 @@ path = "src/main.rs"
 workspace = true
 
 [dependencies]
-async-lsp-boilerplate = { path = "../lsp" }
+async-lsp-boilerplate = { path = "../lsp", features = ["tree-sitter"] }
 
 tokio = { version = "1.45", features = ["full"] }
+
+tree-sitter-zap = { git = "https://github.com/filiptibell/tree-sitter-zap", rev = "4d505590ec1255701d047a8cd152e107ae5bcd40" }

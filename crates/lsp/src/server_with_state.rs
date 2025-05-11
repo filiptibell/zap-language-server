@@ -60,15 +60,15 @@ impl<T: Server + Send + Sync + 'static> LanguageServer for LanguageServerWithSta
     // Document callbacks & updating
 
     fn did_open(&mut self, params: DidOpenTextDocumentParams) -> ControlFlow<Result<()>> {
-        self.state.handle_document_open(params)
+        self.state.handle_document_open::<T>(params)
     }
 
     fn did_change(&mut self, params: DidChangeTextDocumentParams) -> ControlFlow<Result<()>> {
-        self.state.handle_document_change(params)
+        self.state.handle_document_change::<T>(params)
     }
 
     fn did_save(&mut self, params: DidSaveTextDocumentParams) -> ControlFlow<Result<()>> {
-        self.state.handle_document_save(params)
+        self.state.handle_document_save::<T>(params)
     }
 
     // Forwarding for: Hover, Completion, Code Action

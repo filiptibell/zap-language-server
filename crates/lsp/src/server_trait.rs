@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 #![allow(unused_variables)]
 #![allow(clippy::unused_async)]
 #![allow(clippy::must_use_candidate)]
@@ -8,9 +9,12 @@ use async_lsp::{
         ClientCapabilities, CodeAction, CodeActionParams, CodeActionResponse, CompletionItem,
         CompletionParams, CompletionResponse, GotoDefinitionParams, GotoDefinitionResponse, Hover,
         HoverParams, Location, PrepareRenameResponse, ReferenceParams, RenameParams,
-        ServerCapabilities, ServerInfo, TextDocumentPositionParams, WorkspaceEdit,
+        ServerCapabilities, ServerInfo, TextDocumentPositionParams, Url, WorkspaceEdit,
     },
 };
+
+#[cfg(feature = "tree-sitter")]
+use tree_sitter::Language;
 
 use crate::{
     result::{ServerError, ServerResult},
@@ -33,6 +37,11 @@ pub trait Server {
     }
 
     fn server_capabilities(client_capabilities: ClientCapabilities) -> Option<ServerCapabilities> {
+        None
+    }
+
+    #[cfg(feature = "tree-sitter")]
+    fn determine_tree_sitter_language(uri: &Url, language: &str) -> Option<Language> {
         None
     }
 

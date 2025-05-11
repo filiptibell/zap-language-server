@@ -8,6 +8,9 @@ mod transport;
 
 pub use async_lsp::lsp_types;
 
+#[cfg(feature = "tree-sitter")]
+pub use tree_sitter;
+
 pub mod server {
     pub use crate::document::{Document, DocumentReader};
     pub use crate::result::{ServerError, ServerErrorCode, ServerResult};

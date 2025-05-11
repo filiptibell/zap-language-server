@@ -12,7 +12,10 @@ use async_lsp::{
     },
 };
 
-use crate::document::Document;
+#[cfg(feature = "tree-sitter")]
+use tree_sitter::Parser;
+
+use crate::{document::Document, server::Server};
 
 /**
     Managed state for an LSP server.
@@ -62,24 +65,53 @@ impl ServerState {
         Self { client, documents }
     }
 
-    pub(crate) fn handle_document_open(
+    fn insert_document<T: Server>(&self, url: Url, text: String, version: i32, language: String) {
+        #[cfg(feature = "tree-sitter")]
+        let mut tree_sitter_lang = T::determine_tree_sitter_language(&url, language.as_str());
+
+        #[cfg(feature = "tree-sitter")]
+        let tree_sitter_tree = if let Some(lang) = tree_sitter_lang.as_ref() {
+            let mut parser = Parser::new();
+            if parser.set_language(lang).is_ok() {
+                parser.parse(&text, None)
+            } else {
+                tree_sitter_lang.take();
+                None
+            }
+        } else {
+            None
+        };
+
+        self.documents.insert(
+            url.clone(),
+            Document {
+                uri: url,
+                text: Rope::from(text),
+                version,
+                language,
+                #[cfg(feature = "tree-sitter")]
+                tree_sitter_lang,
+                #[cfg(feature = "tree-sitter")]
+                tree_sitter_tree,
+            },
+        );
+    }
+
+    pub(crate) fn handle_document_open<T: Server>(
         &mut self,
         params: DidOpenTextDocumentParams,
     ) -> ControlFlow<Result<()>> {
-        self.documents.insert(
-            params.text_document.uri.clone(),
-            Document {
-                uri: params.text_document.uri,
-                text: Rope::from(params.text_document.text),
-                version: params.text_document.version,
-                language: params.text_document.language_id,
-            },
+        self.insert_document::<T>(
+            params.text_document.uri,
+            params.text_document.text,
+            params.text_document.version,
+            params.text_document.language_id,
         );
 
         ControlFlow::Continue(())
     }
 
-    pub(crate) fn handle_document_change(
+    pub(crate) fn handle_document_change<T: Server>(
         &mut self,
         params: DidChangeTextDocumentParams,
     ) -> ControlFlow<Result<()>> {
@@ -118,12 +150,12 @@ impl ServerState {
                     result_to_control_flow(doc.text.try_insert(start_idx, &change.text))?;
                 }
                 (Err(_), _) => {
-                    *doc = Document {
-                        uri: doc.uri.clone(),
-                        text: Rope::from(change.text),
-                        version: params.text_document.version,
-                        language: doc.language.clone(),
-                    }
+                    self.insert_document::<T>(
+                        doc.uri.clone(),
+                        change.text,
+                        doc.version,
+                        doc.language.clone(),
+                    );
                 }
             }
         }
@@ -131,7 +163,7 @@ impl ServerState {
         ControlFlow::Continue(())
     }
 
-    pub(crate) fn handle_document_save(
+    pub(crate) fn handle_document_save<T: Server>(
         &self,
         params: DidSaveTextDocumentParams,
     ) -> ControlFlow<Result<()>> {
@@ -157,6 +189,28 @@ impl ServerState {
                 Err(err) => return error_to_control_break(err),
             }
         };
+
+        // Since we just read the entire file contents, we will also
+        // re-compute the entire tree-sitter tree from those new contents
+        #[cfg(feature = "tree-sitter")]
+        {
+            let mut tree_sitter_lang = T::determine_tree_sitter_language(doc.url(), doc.language());
+
+            let tree_sitter_tree = if let Some(lang) = tree_sitter_lang.as_ref() {
+                let mut parser = Parser::new();
+                if parser.set_language(lang).is_ok() {
+                    parser.parse(doc.text_contents(), None)
+                } else {
+                    tree_sitter_lang.take();
+                    None
+                }
+            } else {
+                None
+            };
+
+            doc.tree_sitter_lang = tree_sitter_lang;
+            doc.tree_sitter_tree = tree_sitter_tree;
+        }
 
         ControlFlow::Continue(())
     }
