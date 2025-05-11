@@ -22,19 +22,19 @@ use crate::document::Document;
 */
 #[derive(Debug, Clone)]
 pub struct ServerState {
-    client: Arc<ClientSocket>,
+    client: ClientSocket,
     documents: Arc<DashMap<Url, Document>>,
 }
 
 impl ServerState {
     /**
-        Gets a reference to the client connected to the server.
+        Gets a handle to the client connected to the server.
 
         Can be used to send requests and notifications to the client.
     */
     #[must_use]
-    pub fn client(&self) -> &ClientSocket {
-        &self.client
+    pub fn client(&self) -> ClientSocket {
+        self.client.clone()
     }
 
     /**
@@ -58,7 +58,6 @@ impl ServerState {
 
 impl ServerState {
     pub(crate) fn new(client: ClientSocket) -> Self {
-        let client = Arc::new(client);
         let documents = Arc::new(DashMap::new());
         Self { client, documents }
     }
