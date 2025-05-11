@@ -5,7 +5,7 @@ use ropey::Rope;
 
 /**
     A document tracked by the language server, containing
-    the URL, text, and language identifier of the document.
+    the URL, text, version, and language of the document.
 
     May be cloned somewhat cheaply to take a snapshot
     of the current state of the document.
@@ -18,7 +18,8 @@ use ropey::Rope;
 pub struct Document {
     pub(crate) uri: Url,
     pub(crate) text: Rope,
-    pub(crate) lang: String,
+    pub(crate) version: i32,
+    pub(crate) language: String,
 }
 
 impl Document {
@@ -76,11 +77,22 @@ impl Document {
     }
 
     /**
-        Returns the language identifier of the document.
+        Returns the version of the document.
+
+        This number should be strictly increasing with
+        each change to the document, including undo/redo.
     */
     #[must_use]
-    pub fn lang(&self) -> &str {
-        &self.lang
+    pub fn version(&self) -> i32 {
+        self.version
+    }
+
+    /**
+        Returns the language of the document.
+    */
+    #[must_use]
+    pub fn language(&self) -> &str {
+        &self.language
     }
 }
 

@@ -71,7 +71,8 @@ impl ServerState {
             Document {
                 uri: params.text_document.uri,
                 text: Rope::from(params.text_document.text),
-                lang: params.text_document.language_id,
+                version: params.text_document.version,
+                language: params.text_document.language_id,
             },
         );
 
@@ -85,6 +86,8 @@ impl ServerState {
         let Some(mut doc) = self.documents.get_mut(&params.text_document.uri) else {
             return ControlFlow::Continue(());
         };
+
+        doc.version = params.text_document.version;
 
         for change in params.content_changes {
             let Some(range) = change.range else { continue };
@@ -118,7 +121,8 @@ impl ServerState {
                     *doc = Document {
                         uri: doc.uri.clone(),
                         text: Rope::from(change.text),
-                        lang: doc.lang.clone(),
+                        version: params.text_document.version,
+                        language: doc.language.clone(),
                     }
                 }
             }
