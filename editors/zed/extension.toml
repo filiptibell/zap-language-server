@@ -9,3 +9,7 @@ repository = "https://github.com/filiptibell/zap-language"
 [grammars.zap]
 repository = "https://github.com/filiptibell/tree-sitter-zap"
 rev = "4d505590ec1255701d047a8cd152e107ae5bcd40"
+
+[language_servers.zap-language-server]
+name = "Zap Language Server"
+languages = ["Zap"]

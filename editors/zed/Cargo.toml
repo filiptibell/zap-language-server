@@ -1,0 +1,16 @@
+[workspace]
+resolver = "2"
+
+[package]
+name = "zap-language-server-extension"
+version = "0.0.0"
+edition = "2024"
+publish = false
+license = "MIT"
+
+[lib]
+path = "src/extension.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+zed_extension_api = "0.4"
