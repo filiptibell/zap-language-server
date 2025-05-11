@@ -112,6 +112,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "tower",
+ "tracing",
  "tree-sitter",
 ]
 

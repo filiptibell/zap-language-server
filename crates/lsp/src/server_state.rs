@@ -261,7 +261,8 @@ impl ServerState {
         &self,
         params: DidSaveTextDocumentParams,
     ) -> ControlFlow<Result<()>> {
-        let Some(mut doc) = self.documents.get_mut(&params.text_document.uri) else {
+        let url = params.text_document.uri;
+        let Some(mut doc) = self.documents.get_mut(&url) else {
             return ControlFlow::Continue(());
         };
 
@@ -270,10 +271,10 @@ impl ServerState {
         // synchronous both according to LSP spec and the async-lsp crate
         doc.text = if let Some(text) = &params.text {
             Rope::from_str(text)
-        } else if let Ok(text) = std::fs::read_to_string(params.text_document.uri.path()) {
+        } else if let Ok(text) = std::fs::read_to_string(url.path()) {
             Rope::from_str(&text)
         } else {
-            self.documents.remove(&params.text_document.uri);
+            self.documents.remove(&url);
             return ControlFlow::Continue(());
         };
 

@@ -1,16 +1,19 @@
 use std::{ops::ControlFlow, sync::Arc};
 
 use futures::future::BoxFuture;
+use tracing::{debug, info};
 
 use async_lsp::{
     ClientSocket, LanguageServer, ResponseError, Result,
     lsp_types::{
         CodeAction, CodeActionOrCommand, CodeActionParams, CompletionItem, CompletionParams,
-        CompletionResponse, DidChangeTextDocumentParams, DidOpenTextDocumentParams,
-        DidSaveTextDocumentParams, GotoDefinitionParams, GotoDefinitionResponse, Hover,
-        HoverParams, InitializeParams, InitializeResult, Location, PositionEncodingKind,
-        PrepareRenameResponse, ReferenceParams, RenameParams, TextDocumentPositionParams,
-        TextDocumentSyncCapability, TextDocumentSyncKind, WorkspaceEdit,
+        CompletionResponse, DidChangeConfigurationParams, DidChangeTextDocumentParams,
+        DidCloseTextDocumentParams, DidOpenTextDocumentParams, DidSaveTextDocumentParams,
+        GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverParams, InitializeParams,
+        InitializeResult, InitializedParams, Location, PositionEncodingKind, PrepareRenameResponse,
+        ReferenceParams, RenameParams, SaveOptions, TextDocumentPositionParams,
+        TextDocumentSyncCapability, TextDocumentSyncKind, TextDocumentSyncOptions,
+        TextDocumentSyncSaveOptions, WorkspaceEdit,
     },
 };
 
@@ -50,17 +53,72 @@ impl<T: Server + Send + Sync + 'static> LanguageServer for LanguageServerWithSta
         };
 
         result.capabilities.position_encoding = Some(PositionEncodingKind::UTF32);
-        result.capabilities.text_document_sync = Some(TextDocumentSyncCapability::Kind(
-            TextDocumentSyncKind::INCREMENTAL,
+        result.capabilities.text_document_sync = Some(TextDocumentSyncCapability::Options(
+            TextDocumentSyncOptions {
+                change: Some(TextDocumentSyncKind::INCREMENTAL),
+                open_close: Some(true),
+                save: Some(TextDocumentSyncSaveOptions::SaveOptions(SaveOptions {
+                    include_text: Some(true),
+                })),
+                ..Default::default()
+            },
         ));
+
+        let num_folders = params
+            .workspace_folders
+            .as_deref()
+            .unwrap_or_default()
+            .len();
+
+        if let Some(info) = &params.client_info {
+            if let Some(version) = &info.version {
+                info!(
+                    "Client connected - {} v{} - {} workspace folder{}",
+                    info.name,
+                    version,
+                    num_folders,
+                    if num_folders == 1 { "" } else { "s" }
+                );
+            } else {
+                info!(
+                    "Client connected - {} - {} workspace folder{}",
+                    info.name,
+                    num_folders,
+                    if num_folders == 1 { "" } else { "s" }
+                );
+            }
+        } else {
+            info!(
+                "Client connected - {} workspace folder{}",
+                num_folders,
+                if num_folders == 1 { "" } else { "s" }
+            );
+        }
 
         Box::pin(async move { Ok(result) })
     }
 
-    // Document callbacks & updating
+    // Document notification callbacks & content updating
+
+    fn initialized(&mut self, _params: InitializedParams) -> ControlFlow<Result<()>> {
+        ControlFlow::Continue(())
+    }
+
+    fn did_change_configuration(
+        &mut self,
+        _params: DidChangeConfigurationParams,
+    ) -> ControlFlow<Result<()>> {
+        ControlFlow::Continue(())
+    }
 
     fn did_open(&mut self, params: DidOpenTextDocumentParams) -> ControlFlow<Result<()>> {
+        debug!("did_open: {}", params.text_document.uri);
         self.state.handle_document_open::<T>(params)
+    }
+
+    fn did_close(&mut self, params: DidCloseTextDocumentParams) -> ControlFlow<Result<()>> {
+        debug!("did_close: {}", params.text_document.uri);
+        ControlFlow::Continue(())
     }
 
     fn did_change(&mut self, params: DidChangeTextDocumentParams) -> ControlFlow<Result<()>> {
@@ -68,6 +126,7 @@ impl<T: Server + Send + Sync + 'static> LanguageServer for LanguageServerWithSta
     }
 
     fn did_save(&mut self, params: DidSaveTextDocumentParams) -> ControlFlow<Result<()>> {
+        debug!("did_save: {}", params.text_document.uri);
         self.state.handle_document_save::<T>(params)
     }
 

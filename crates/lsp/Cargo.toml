@@ -23,4 +23,5 @@ ropey = "1.6"
 thiserror = "2.0"
 tokio = { version = "1.45", features = ["full"] }
 tower = "0.5"
+tracing = "0.1"
 tree-sitter = { version = "0.25", optional = true }
