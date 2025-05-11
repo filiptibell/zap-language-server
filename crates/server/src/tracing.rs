@@ -9,7 +9,11 @@ const IS_DEBUG: bool = false;
 
 pub fn setup_tracing() {
     let tracing_filter = EnvFilter::builder()
-        .with_default_directive(LevelFilter::INFO.into())
+        .with_default_directive(if IS_DEBUG {
+            LevelFilter::DEBUG.into()
+        } else {
+            LevelFilter::INFO.into()
+        })
         .from_env_lossy()
         .add_directive("rustls=warn".parse().unwrap())
         .add_directive("tower_lsp=warn".parse().unwrap())
