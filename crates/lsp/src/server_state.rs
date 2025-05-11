@@ -2,7 +2,7 @@
 
 use std::{io, ops::ControlFlow, sync::Arc};
 
-use dashmap::{DashMap, mapref::one::Ref};
+use dashmap::DashMap;
 use ropey::Rope;
 
 use async_lsp::{
@@ -38,18 +38,19 @@ impl ServerState {
     }
 
     /**
-        Gets a reference to a document by its URL.
+        Gets a snapshot of a document by its URL.
 
-        This reference should preferrably be held for only
-        as short of a duration as possible - while holding
-        the reference, the document at this URL will not
-        be able to be modified by saving or editing it.
+        This will return the document exactly as it was
+        at the time of calling this method - any further
+        modifications such as saves or edits will not be
+        reflected in the returned document or its contents.
 
         Returns `None` if the document is not found.
     */
     #[must_use]
-    pub fn document(&self, url: &Url) -> Option<Ref<Url, Document>> {
-        self.documents.get(url)
+    pub fn document(&self, url: &Url) -> Option<Document> {
+        let doc = self.documents.get(url)?;
+        Some(doc.clone())
     }
 }
 

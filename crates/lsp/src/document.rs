@@ -14,7 +14,7 @@ use ropey::Rope;
     since the language server should be responsible for
     always keeping the document up-to-date when edits occur.
 */
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Document {
     pub(crate) uri: Url,
     pub(crate) text: Rope,
