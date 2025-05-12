@@ -199,7 +199,10 @@ impl Document {
     */
     #[must_use]
     pub fn query(&self, query: impl AsRef<str>) -> Option<Vec<DocumentQueryCapture>> {
-        use tree_sitter::{Node, Point, Query, QueryCursor, StreamingIterator};
+        use crate::{
+            tree_sitter::{Query, QueryCursor, StreamingIterator},
+            tree_sitter_utils::ts_range_to_lsp_range,
+        };
 
         let lang = self.tree_sitter_lang.as_ref()?;
         let tree = self.tree_sitter_tree.as_ref()?;
@@ -213,27 +216,13 @@ impl Document {
         let mut cursor = QueryCursor::new();
         let mut it = cursor.matches(&query, tree.root_node(), doc_bytes);
 
-        fn point_to_position(point: Point) -> Position {
-            Position {
-                line: point.row as u32,
-                character: point.column as u32,
-            }
-        }
-
-        fn range_from_node(node: &Node) -> Range {
-            Range {
-                start: point_to_position(node.start_position()),
-                end: point_to_position(node.end_position()),
-            }
-        }
-
         let mut items = Vec::new();
         while let Some(matched) = it.next() {
             for capture in matched.captures {
                 if let Ok(text) = capture.node.utf8_text(doc_bytes) {
                     let name = query_names[capture.index as usize].to_string();
                     let text = text.to_string();
-                    let range = range_from_node(&capture.node);
+                    let range = ts_range_to_lsp_range(capture.node.range());
                     items.push(DocumentQueryCapture { name, text, range });
                 }
             }
