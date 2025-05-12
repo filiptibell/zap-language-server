@@ -88,10 +88,10 @@ The generated remotes will be in `ReplicatedStorage -> ZAP`.
 ### Example
 
 ```zap
-opt remote_scope = \"CHARACTER\"
+opt remote_folder = \"CHARACTER\"
 ```
 
-The generated remotes be in `ReplicatedStorage -> CHARACTER`
+The generated remotes will be in `ReplicatedStorage -> CHARACTER`
 ";
 
 pub const OPTION_DESCRIPTION_CASING: &str = "

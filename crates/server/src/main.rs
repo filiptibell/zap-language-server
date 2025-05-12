@@ -1,5 +1,7 @@
 mod cli;
+mod completions;
 mod docs;
+mod hovers;
 mod server;
 mod tracing;
 

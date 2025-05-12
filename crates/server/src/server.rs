@@ -1,14 +1,16 @@
 use async_lsp_boilerplate::{
     lsp_types::{
-        ClientCapabilities, Hover, HoverContents, HoverParams, HoverProviderCapability,
-        MarkedString, ServerCapabilities, ServerInfo, Url,
+        ClientCapabilities, CompletionOptions, CompletionParams, CompletionResponse, Hover,
+        HoverParams, HoverProviderCapability, ServerCapabilities, ServerInfo, Url,
     },
     server::{Server, ServerResult, ServerState},
     tree_sitter::Language,
-    tree_sitter_utils::ts_range_to_lsp_range,
 };
 
-use crate::docs::{find_docs_enum, find_docs_option};
+use crate::{
+    completions::{completion_for_options, completion_trigger_characters},
+    hovers::hover_for_options,
+};
 
 #[derive(Debug, Clone)]
 pub struct ZapLanguageServer {}
@@ -36,12 +38,17 @@ impl Server for ZapLanguageServer {
     fn server_capabilities(_: ClientCapabilities) -> Option<ServerCapabilities> {
         Some(ServerCapabilities {
             hover_provider: Some(HoverProviderCapability::Simple(true)),
+            completion_provider: Some(CompletionOptions {
+                resolve_provider: Some(true),
+                trigger_characters: Some(completion_trigger_characters()),
+                ..Default::default()
+            }),
             ..Default::default()
         })
     }
 
     fn determine_tree_sitter_language(_: &Url, language: &str) -> Option<Language> {
-        if language.eq_ignore_ascii_case("zap") {
+        if language.trim().eq_ignore_ascii_case("zap") {
             Some(tree_sitter_zap::LANGUAGE.into())
         } else {
             None
@@ -62,32 +69,27 @@ impl Server for ZapLanguageServer {
             return Ok(None);
         };
 
-        if let Some((head, desc)) = find_docs_enum([parent.kind(), node.kind()]).or_else(|| {
-            if parent.kind() == "option_declaration" && node.kind() == "identifier" {
-                let ident = doc.text().byte_slice(node.byte_range());
-                find_docs_option([ident])
-            } else {
-                None
-            }
-        }) {
-            return Ok(Some(Hover {
-                range: Some(ts_range_to_lsp_range(node.range())),
-                contents: HoverContents::Scalar(MarkedString::String(format!(
-                    "# {head}\n\n{desc}\n"
-                ))),
-            }));
-        }
+        Ok(hover_for_options(&doc, &pos, &node, &parent))
+    }
 
-        Ok(None)
+    async fn completion(
+        &self,
+        state: ServerState,
+        params: CompletionParams,
+    ) -> ServerResult<Option<CompletionResponse>> {
+        let url = params.text_document_position.text_document.uri;
+        let pos = params.text_document_position.position;
 
-        // Ok(Some(Hover {
-        //     range: Some(ts_range_to_lsp_range(node.range())),
-        //     contents: HoverContents::Scalar(MarkedString::String(format!(
-        //         "# {} > {}\n\n{}",
-        //         parent.kind(),
-        //         node.kind(),
-        //         doc.text().byte_slice(node.byte_range()).to_string(),
-        //     ))),
-        // }))
+        let Some(doc) = state.document(&url) else {
+            return Ok(None);
+        };
+        let Some(node) = doc.node_at_position(pos) else {
+            return Ok(None);
+        };
+        let Some(parent) = node.parent() else {
+            return Ok(None);
+        };
+
+        Ok(completion_for_options(&doc, &pos, &node, &parent))
     }
 }
