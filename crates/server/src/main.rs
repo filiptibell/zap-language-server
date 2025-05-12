@@ -1,4 +1,5 @@
 mod cli;
+mod docs;
 mod server;
 mod tracing;
 

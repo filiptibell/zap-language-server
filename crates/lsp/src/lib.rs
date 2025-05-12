@@ -11,6 +11,9 @@ pub use async_lsp::lsp_types;
 #[cfg(feature = "tree-sitter")]
 pub use tree_sitter;
 
+#[cfg(feature = "tree-sitter")]
+pub mod tree_sitter_utils;
+
 pub mod server {
     pub use crate::document::{Document, DocumentReader};
     pub use crate::result::{ServerError, ServerErrorCode, ServerResult};

@@ -5,7 +5,10 @@ use async_lsp_boilerplate::{
     },
     server::{Server, ServerResult, ServerState},
     tree_sitter::Language,
+    tree_sitter_utils::ts_range_to_lsp_range,
 };
+
+use crate::docs::{find_docs_enum, find_docs_option};
 
 #[derive(Debug, Clone)]
 pub struct ZapLanguageServer {}
@@ -47,19 +50,45 @@ impl Server for ZapLanguageServer {
 
     async fn hover(&self, state: ServerState, params: HoverParams) -> ServerResult<Option<Hover>> {
         let url = params.text_document_position_params.text_document.uri;
+        let pos = params.text_document_position_params.position;
+
         let Some(doc) = state.document(&url) else {
             return Ok(None);
         };
+        let Some(node) = doc.node_at_position(pos) else {
+            return Ok(None);
+        };
+        let Some(parent) = node.parent() else {
+            return Ok(None);
+        };
 
-        Ok(Some(Hover {
-            range: None,
-            contents: HoverContents::Scalar(MarkedString::String(String::from(
-                if doc.has_syntax_tree() {
-                    "Hello, zap language server! Syntax tree is available!"
+        if let Some((header, description)) =
+            find_docs_enum([parent.kind(), node.kind()]).or_else(|| {
+                if node.kind() == "option_name" {
+                    find_docs_option([doc.text().byte_slice(node.byte_range())])
                 } else {
-                    "Hello, zap language server! No syntax tree available :("
-                },
-            ))),
-        }))
+                    None
+                }
+            })
+        {
+            return Ok(Some(Hover {
+                range: Some(ts_range_to_lsp_range(node.range())),
+                contents: HoverContents::Scalar(MarkedString::String(format!(
+                    "# {header}\n\n{description}\n"
+                ))),
+            }));
+        }
+
+        Ok(None)
+
+        // Ok(Some(Hover {
+        //     range: Some(ts_range_to_lsp_range(node.range())),
+        //     contents: HoverContents::Scalar(MarkedString::String(format!(
+        //         "# {} > {}\n\n{}",
+        //         parent.kind(),
+        //         node.kind(),
+        //         doc.text().byte_slice(node.byte_range()).to_string(),
+        //     ))),
+        // }))
     }
 }
