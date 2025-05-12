@@ -1,11 +1,11 @@
 [package]
-name = "async-lsp-boilerplate"
+name = "async-language-server"
 version = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
 
 [lib]
-name = "async_lsp_boilerplate"
+name = "async_language_server"
 path = "src/lib.rs"
 
 [lints]

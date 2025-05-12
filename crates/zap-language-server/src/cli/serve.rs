@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use tracing::debug;
 
-use async_lsp_boilerplate::server::{Transport, serve};
+use async_language_server::server::{Transport, serve};
 
 use crate::server::ZapLanguageServer;
 

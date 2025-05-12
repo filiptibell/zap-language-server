@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
-default-members = ["crates/server"]
-members = ["crates/server", "crates/lsp"]
+default-members = ["crates/zap-language-server"]
+members = ["crates/async-language-server", "crates/zap-language-server"]
 
 [profile.release]
 opt-level = "z"

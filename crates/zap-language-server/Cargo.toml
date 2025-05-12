@@ -19,5 +19,5 @@ tokio = { version = "1.45", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
-async-lsp-boilerplate = { path = "../lsp", features = ["tree-sitter"] }
+async-language-server = { path = "../async-language-server", features = ["tree-sitter"] }
 tree-sitter-zap = { git = "https://github.com/filiptibell/tree-sitter-zap", rev = "5e5bb08c91b0ddc3b3f6fde7eeb1a6633473b4b3" }

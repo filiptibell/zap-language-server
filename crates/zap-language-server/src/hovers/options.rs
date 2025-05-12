@@ -1,4 +1,4 @@
-use async_lsp_boilerplate::{
+use async_language_server::{
     lsp_types::{Hover, HoverContents, MarkedString, Position},
     server::Document,
     tree_sitter::Node,

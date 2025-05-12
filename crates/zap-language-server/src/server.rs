@@ -1,4 +1,4 @@
-use async_lsp_boilerplate::{
+use async_language_server::{
     lsp_types::{
         ClientCapabilities, CompletionOptions, CompletionParams, CompletionResponse, Hover,
         HoverParams, HoverProviderCapability, ServerCapabilities, ServerInfo, Url,
