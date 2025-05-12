@@ -62,19 +62,18 @@ impl Server for ZapLanguageServer {
             return Ok(None);
         };
 
-        if let Some((header, description)) =
-            find_docs_enum([parent.kind(), node.kind()]).or_else(|| {
-                if node.kind() == "option_name" {
-                    find_docs_option([doc.text().byte_slice(node.byte_range())])
-                } else {
-                    None
-                }
-            })
-        {
+        if let Some((head, desc)) = find_docs_enum([parent.kind(), node.kind()]).or_else(|| {
+            if parent.kind() == "option_declaration" && node.kind() == "identifier" {
+                let ident = doc.text().byte_slice(node.byte_range());
+                find_docs_option([ident])
+            } else {
+                None
+            }
+        }) {
             return Ok(Some(Hover {
                 range: Some(ts_range_to_lsp_range(node.range())),
                 contents: HoverContents::Scalar(MarkedString::String(format!(
-                    "# {header}\n\n{description}\n"
+                    "# {head}\n\n{desc}\n"
                 ))),
             }));
         }
