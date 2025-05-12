@@ -10,9 +10,6 @@
   "map"
 ] @keyword
 
-; Not keywords
-(event_type_field "type" @property)
-
 ; Operators
 "=" @operator
 "?" @operator
@@ -64,8 +61,7 @@
 
 ; Options and Variables
 (option_declaration
-(option_name) @variable)
-
+(identifier) @variable)
 (identifier) @variable
 
 ; Declarations
@@ -78,6 +74,9 @@
 (function_declaration
   name: (identifier) @function)
 
+(enum_variant
+  name: (identifier) @enum.variant)
+
 ; Fields and Properties
 (struct_field
   name: (identifier) @property)
@@ -85,8 +84,16 @@
 (event_data_tuple
   name: (identifier) @property)
 
-(enum_variant
-  name: (identifier) @enum.variant)
+(event_from_field "from" @property)
+(event_type_field "type" @property)
+(event_call_field "call" @property)
+(event_data_field "data" @property)
+
+(function_call_field "call" @property)
+(function_args_field "args" @property)
+(function_rets_field "rets" @property)
+
+(unknown_field (identifier) @property)
 
 ; Literals
 ["true" "false"] @boolean
