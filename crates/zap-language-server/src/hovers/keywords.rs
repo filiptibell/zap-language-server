@@ -5,7 +5,7 @@ use async_language_server::{
     tree_sitter_utils::{ts_range_contains_lsp_position, ts_range_to_lsp_range},
 };
 
-use crate::docs::find_keyword;
+use zap_language::docs::find_keyword;
 
 pub fn hover(doc: &Document, pos: &Position, node: &Node, _parent: Option<&Node>) -> Option<Hover> {
     let mut node = node.clone();

@@ -1302,6 +1302,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "zap-language"
+version = "0.0.0"
+
+[[package]]
 name = "zap-language-server"
 version = "0.0.0"
 dependencies = [
@@ -1312,6 +1316,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "tree-sitter-zap",
+ "zap-language",
 ]
 
 [[package]]

@@ -1,0 +1,12 @@
+[package]
+name = "zap-language"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+
+[lib]
+name = "zap_language"
+path = "src/lib.rs"
+
+[lints]
+workspace = true

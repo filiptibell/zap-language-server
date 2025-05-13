@@ -5,7 +5,7 @@ use async_language_server::{
     tree_sitter_utils::ts_range_contains_lsp_position,
 };
 
-use crate::docs::get_instance_class_names;
+use zap_language::docs::get_instance_class_names;
 
 pub fn completion(
     doc: &Document,

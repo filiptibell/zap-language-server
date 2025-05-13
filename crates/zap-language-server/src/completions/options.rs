@@ -10,7 +10,7 @@ use async_language_server::{
     tree_sitter_utils::ts_range_contains_lsp_position,
 };
 
-use crate::docs::{find_option, find_variants, get_option_names};
+use zap_language::docs::{find_option, find_variants, get_option_names};
 
 pub async fn completion(
     doc: &Document,

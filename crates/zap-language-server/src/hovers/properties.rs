@@ -5,7 +5,7 @@ use async_language_server::{
     tree_sitter_utils::ts_range_to_lsp_range,
 };
 
-use crate::docs::find_property;
+use zap_language::docs::find_property;
 
 pub fn hover(
     _doc: &Document,
