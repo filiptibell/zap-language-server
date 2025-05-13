@@ -1,8 +1,8 @@
 use async_language_server::{
     lsp_types::{
         ClientCapabilities, CompletionItem, CompletionOptions, CompletionParams,
-        CompletionResponse, Hover, HoverParams, HoverProviderCapability, ServerCapabilities,
-        ServerInfo, Url,
+        CompletionResponse, GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverParams,
+        HoverProviderCapability, OneOf, ServerCapabilities, ServerInfo, Url,
     },
     server::{Server, ServerResult, ServerState},
     tree_sitter::Language,
@@ -13,6 +13,7 @@ use crate::{
         completion_for_instances, completion_for_keywords, completion_for_options,
         completion_for_types, completion_trigger_characters,
     },
+    definitions::definition_for_types,
     hovers::{hover_for_keywords, hover_for_options, hover_for_properties, hover_for_types},
 };
 
@@ -42,6 +43,7 @@ impl Server for ZapLanguageServer {
     fn server_capabilities(_: ClientCapabilities) -> Option<ServerCapabilities> {
         Some(ServerCapabilities {
             hover_provider: Some(HoverProviderCapability::Simple(true)),
+            definition_provider: Some(OneOf::Left(true)),
             completion_provider: Some(CompletionOptions {
                 resolve_provider: Some(true),
                 trigger_characters: Some(completion_trigger_characters()),
@@ -117,5 +119,26 @@ impl Server for ZapLanguageServer {
                     .collect(),
             )))
         }
+    }
+
+    async fn definition(
+        &self,
+        state: ServerState,
+        params: GotoDefinitionParams,
+    ) -> ServerResult<Option<GotoDefinitionResponse>> {
+        let url = params.text_document_position_params.text_document.uri;
+        let pos = params.text_document_position_params.position;
+
+        let Some(doc) = state.document(&url) else {
+            return Ok(None);
+        };
+        let Some(node) = doc.node_at_position(pos) else {
+            return Ok(None);
+        };
+
+        let parent = node.parent();
+        let parent = parent.as_ref();
+
+        Ok(definition_for_types(&doc, &pos, &node, parent))
     }
 }
