@@ -1,6 +1,8 @@
 use std::{ops::ControlFlow, sync::Arc};
 
 use futures::future::BoxFuture;
+
+#[cfg(feature = "tracing")]
 use tracing::{debug, info};
 
 use async_lsp::{
@@ -71,29 +73,32 @@ impl<T: Server + Send + Sync + 'static> LanguageServer for LanguageServerWithSta
             .unwrap_or_default()
             .len();
 
-        if let Some(info) = &params.client_info {
-            if let Some(version) = &info.version {
-                info!(
-                    "Client connected - {} v{} - {} workspace folder{}",
-                    info.name,
-                    version,
-                    num_folders,
-                    if num_folders == 1 { "" } else { "s" }
-                );
+        #[cfg(feature = "tracing")]
+        {
+            if let Some(info) = &params.client_info {
+                if let Some(version) = &info.version {
+                    info!(
+                        "Client connected - {} v{} - {} workspace folder{}",
+                        info.name,
+                        version,
+                        num_folders,
+                        if num_folders == 1 { "" } else { "s" }
+                    );
+                } else {
+                    info!(
+                        "Client connected - {} - {} workspace folder{}",
+                        info.name,
+                        num_folders,
+                        if num_folders == 1 { "" } else { "s" }
+                    );
+                }
             } else {
                 info!(
-                    "Client connected - {} - {} workspace folder{}",
-                    info.name,
+                    "Client connected - {} workspace folder{}",
                     num_folders,
                     if num_folders == 1 { "" } else { "s" }
                 );
             }
-        } else {
-            info!(
-                "Client connected - {} workspace folder{}",
-                num_folders,
-                if num_folders == 1 { "" } else { "s" }
-            );
         }
 
         Box::pin(async move { Ok(result) })
@@ -113,11 +118,13 @@ impl<T: Server + Send + Sync + 'static> LanguageServer for LanguageServerWithSta
     }
 
     fn did_open(&mut self, params: DidOpenTextDocumentParams) -> ControlFlow<Result<()>> {
+        #[cfg(feature = "tracing")]
         debug!("did_open: {}", params.text_document.uri);
         self.state.handle_document_open::<T>(params)
     }
 
     fn did_close(&mut self, params: DidCloseTextDocumentParams) -> ControlFlow<Result<()>> {
+        #[cfg(feature = "tracing")]
         debug!("did_close: {}", params.text_document.uri);
         ControlFlow::Continue(())
     }
@@ -127,6 +134,7 @@ impl<T: Server + Send + Sync + 'static> LanguageServer for LanguageServerWithSta
     }
 
     fn did_save(&mut self, params: DidSaveTextDocumentParams) -> ControlFlow<Result<()>> {
+        #[cfg(feature = "tracing")]
         debug!("did_save: {}", params.text_document.uri);
         self.state.handle_document_save::<T>(params)
     }

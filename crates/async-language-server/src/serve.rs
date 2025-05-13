@@ -4,9 +4,12 @@ use std::num::NonZeroUsize;
 
 use async_lsp::{
     client_monitor::ClientProcessMonitorLayer, concurrency::ConcurrencyLayer,
-    panic::CatchUnwindLayer, router::Router, server::LifecycleLayer, tracing::TracingLayer,
+    panic::CatchUnwindLayer, router::Router, server::LifecycleLayer,
 };
 use tower::ServiceBuilder;
+
+#[cfg(feature = "tracing")]
+use async_lsp::tracing::TracingLayer;
 
 use crate::{
     result::ServerResult, server_trait::Server, server_with_state::LanguageServerWithState,
@@ -38,9 +41,12 @@ where
     let (reader, writer) = transport.into_read_write().await?;
 
     let (server, _) = async_lsp::MainLoop::new_server(|client| {
-        ServiceBuilder::new()
-            .layer(LifecycleLayer::default())
-            .layer(TracingLayer::default())
+        let builder = ServiceBuilder::new().layer(LifecycleLayer::default());
+
+        #[cfg(feature = "tracing")]
+        let builder = builder.layer(TracingLayer::default());
+
+        builder
             .layer(ConcurrencyLayer::new(NonZeroUsize::new(8).unwrap()))
             .layer(CatchUnwindLayer::default())
             .layer(ClientProcessMonitorLayer::new(client.clone()))
