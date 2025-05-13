@@ -7,7 +7,10 @@ use async_language_server::{
 
 use crate::docs::{find_enum_docs, find_option_docs};
 
-pub fn hover(doc: &Document, _pos: &Position, node: &Node, parent: &Node) -> Option<Hover> {
+pub fn hover(doc: &Document, _pos: &Position, node: &Node, parent: Option<&Node>) -> Option<Hover> {
+    let parent = parent?.clone();
+    let node = node.clone();
+
     if let Some((head, desc)) = find_enum_docs([parent.kind(), node.kind()]).or_else(|| {
         if parent.kind() == "option_declaration" && node.kind() == "identifier" {
             let ident = doc.text().byte_slice(node.byte_range());

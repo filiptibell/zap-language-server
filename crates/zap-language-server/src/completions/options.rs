@@ -1,5 +1,5 @@
 use async_language_server::{
-    lsp_types::{CompletionItem, CompletionItemKind, CompletionResponse, Position},
+    lsp_types::{CompletionItemKind, Position},
     server::Document,
     tree_sitter::Node,
     tree_sitter_utils::ts_range_contains_lsp_position,
@@ -11,11 +11,14 @@ pub fn completion(
     doc: &Document,
     pos: &Position,
     node: &Node,
-    parent: &Node,
-) -> Option<CompletionResponse> {
+    parent: Option<&Node>,
+) -> Vec<(CompletionItemKind, String)> {
     let pos = pos.clone();
+
     let mut node = node.clone();
-    let mut parent = parent.clone();
+    let Some(mut parent) = parent.cloned() else {
+        return Vec::new();
+    };
 
     if node.kind() == "option_declaration" {
         let mut cursor = node.walk();
@@ -24,35 +27,24 @@ pub fn completion(
                 if ts_range_contains_lsp_position(child.range(), pos) {
                     parent = node;
                     node = child;
+                    break;
                 }
-                break;
             }
         }
     }
 
+    let mut items = Vec::new();
+
     if parent.kind() == "option_declaration" && node.kind() == "identifier" {
         let ident = doc.text().byte_slice(node.byte_range());
         if let Some(ident) = ident.as_str() {
-            let mut completions = get_option_names()
-                .filter(|opt| opt.contains(ident))
-                .map(ToString::to_string)
-                .collect::<Vec<_>>();
-
-            completions.sort_unstable();
-            completions.dedup();
-
-            return Some(CompletionResponse::Array(
-                completions
-                    .into_iter()
-                    .map(|opt| CompletionItem {
-                        kind: Some(CompletionItemKind::ENUM_MEMBER),
-                        label: opt,
-                        ..Default::default()
-                    })
-                    .collect(),
-            ));
+            items.extend(
+                get_option_names()
+                    .filter(|opt| opt.contains(ident))
+                    .map(|opt| (CompletionItemKind::ENUM_MEMBER, opt.to_string())),
+            );
         }
     }
 
-    None
+    items
 }
