@@ -5,6 +5,7 @@ use async_language_server::{
     tree_sitter_utils::ts_range_contains_lsp_position,
 };
 
+const TYPE_KEYWORDS: [&str; 4] = ["struct", "enum", "set", "map"];
 const TYPE_PRIMITIVES: [&str; 19] = [
     "string",
     "boolean",
@@ -95,6 +96,12 @@ pub fn completion(
         }
 
         if ident.is_some() {
+            items.extend(
+                TYPE_KEYWORDS
+                    .iter()
+                    .map(|word| (CompletionItemKind::KEYWORD, word.to_string())),
+            );
+
             items.extend(
                 TYPE_PRIMITIVES
                     .iter()
