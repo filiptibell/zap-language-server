@@ -1,12 +1,3 @@
-pub const FUNCT_DECLARATION_DESCRIPTION: &str = "
-Functions are another method of communication where the client can send arguments and have them returned by the server.
-For security reasons, Zap only supports `Client -> Server -> Client` functions, not `Server -> Client -> Server`.
-
-## Defining Functions
-
-Functions are defined using the `funct` keyword.
-";
-
 pub const FUNCT_FIELD_DESCRIPTION_CALL: &str = "
 This field determines how the function is listened to on the server. The function will take the `args` as parameters and return `rets`.
 

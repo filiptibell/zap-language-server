@@ -13,7 +13,7 @@ use crate::{
         completion_for_keywords, completion_for_options, completion_for_types,
         completion_trigger_characters,
     },
-    hovers::hover_for_options,
+    hovers::{hover_for_keywords, hover_for_options, hover_for_properties},
 };
 
 #[derive(Debug, Clone)]
@@ -73,7 +73,9 @@ impl Server for ZapLanguageServer {
         let parent = node.parent();
         let parent = parent.as_ref();
 
-        Ok(hover_for_options(&doc, &pos, &node, parent))
+        Ok(hover_for_options(&doc, &pos, &node, parent)
+            .or_else(|| hover_for_keywords(&doc, &pos, &node, parent))
+            .or_else(|| hover_for_properties(&doc, &pos, &node, parent)))
     }
 
     async fn completion(

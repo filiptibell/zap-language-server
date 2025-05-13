@@ -1,15 +1,40 @@
 mod events;
 mod functs;
+mod keywords;
 mod options;
 
 #[rustfmt::skip]
+const KEYWORD_DEFINITIONS: &[(&str, &str, &str)] = &[
+	("event",  "Events",    self::keywords::KEYWORD_EVENT_DESCRIPTION),
+	("funct",  "Functions", self::keywords::KEYWORD_FUNCT_DESCRIPTION),
+	("struct", "Structs",   self::keywords::KEYWORD_STRUCT_DESCRIPTION),
+	("enum",   "Enums",     self::keywords::KEYWORD_ENUM_DESCRIPTION),
+	("map",    "Maps",      self::keywords::KEYWORD_MAP_DESCRIPTION),
+	("set",    "Sets",      self::keywords::KEYWORD_SET_DESCRIPTION),
+];
+
+pub fn find_keyword<I, S>(it: I) -> Option<(&'static str, &'static str)>
+where
+    I: IntoIterator<Item = S>,
+    S: Into<String>,
+{
+    let names: Vec<String> = it.into_iter().map(|s| s.into()).collect();
+
+    for (name, header, desc) in KEYWORD_DEFINITIONS {
+        if names.contains(&name.to_string()) {
+            return Some((header, desc));
+        }
+    }
+
+    None
+}
+
+#[rustfmt::skip]
 const PROPERTY_DEFINITIONS: &[(&str, &str, &str)] = &[
-	("event_declaration",    "Events",    self::events::EVENT_DECLARATION_DESCRIPTION),
 	("event_from_field",     "from",      self::events::EVENT_FIELD_DESCRIPTION_FROM),
 	("event_type_field",     "type",      self::events::EVENT_FIELD_DESCRIPTION_TYPE),
 	("event_call_field",     "call",      self::events::EVENT_FIELD_DESCRIPTION_CALL),
 	("event_data_field",     "data",      self::events::EVENT_FIELD_DESCRIPTION_DATA),
-	("function_declaration", "Functions", self::functs::FUNCT_DECLARATION_DESCRIPTION),
 	("function_call_field",  "call",      self::functs::FUNCT_FIELD_DESCRIPTION_CALL),
 	("function_args_field",  "args",      self::functs::FUNCT_FIELD_DESCRIPTION_ARGS),
 	("function_rets_field",  "rets",      self::functs::FUNCT_FIELD_DESCRIPTION_RETS),

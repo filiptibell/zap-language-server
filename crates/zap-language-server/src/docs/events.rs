@@ -1,12 +1,3 @@
-pub const EVENT_DECLARATION_DESCRIPTION: &str = "
-Events are the primary method of communication between the client and the server.
-Events are also what is exposed to the developer from Zap's generated API.
-
-## Defining Events
-
-Events are defined using the `event` keyword.
-";
-
 pub const EVENT_FIELD_DESCRIPTION_FROM: &str = "
 This field determines which side of the game can fire the event. It can be either `Server` or `Client`.
 
