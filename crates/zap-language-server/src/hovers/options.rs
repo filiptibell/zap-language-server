@@ -13,7 +13,6 @@ pub fn hover(
     node: &Node,
     _parent: Option<&Node>,
 ) -> Option<Hover> {
-    let node = node.clone();
     let text = doc.text().byte_slice(node.byte_range());
 
     if let Some((name, _, desc)) = find_option([text]) {

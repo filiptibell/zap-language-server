@@ -4,14 +4,25 @@ use async_language_server::{
     tree_sitter::Node,
     tree_sitter_utils::{ts_range_contains_lsp_position, ts_range_to_lsp_range},
 };
+use zap_language::docs::find_primitive;
 
 pub fn hover(doc: &Document, pos: &Position, node: &Node, parent: Option<&Node>) -> Option<Hover> {
-    if node.kind() != "identifier" {
+    if !matches!(node.kind(), "identifier" | "primitive_type") {
         return None;
     }
 
     let parent = parent?;
     let pos = pos.clone();
+    let text = doc.text().byte_slice(node.byte_range());
+
+    if let Some((_, header, desc)) = find_primitive([text]) {
+        return Some(Hover {
+            range: Some(ts_range_to_lsp_range(node.range())),
+            contents: HoverContents::Scalar(MarkedString::String(format!(
+                "# {header}\n\n{desc}\n"
+            ))),
+        });
+    }
 
     // We might be at K or V in either of "set { V }" or "map { [K]: V }",
     // and will just need to make sure, then we can show the type on hover

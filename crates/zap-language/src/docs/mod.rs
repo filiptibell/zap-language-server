@@ -1,5 +1,7 @@
 mod definitions;
 
+use definitions::PRIMITIVE_DEFINITIONS;
+
 use self::definitions::{
     INSTANCE_CLASS_NAMES, KEYWORD_DEFINITIONS, OPTION_DEFINITIONS, PROPERTY_DEFINITIONS,
     VARIANT_DEFINITIONS,
@@ -7,6 +9,10 @@ use self::definitions::{
 
 pub fn get_option_names() -> impl Iterator<Item = &'static str> {
     OPTION_DEFINITIONS.iter().map(|(name, _, _)| *name)
+}
+
+pub fn get_primitive_names() -> impl Iterator<Item = &'static str> {
+    PRIMITIVE_DEFINITIONS.iter().map(|(name, _, _)| *name)
 }
 
 pub fn get_instance_class_names() -> impl Iterator<Item = &'static str> {
@@ -55,6 +61,22 @@ where
     for (name, typ, desc) in OPTION_DEFINITIONS {
         if names.contains(&name.to_string()) {
             return Some((name, typ, desc));
+        }
+    }
+
+    None
+}
+
+pub fn find_primitive<I, S>(it: I) -> Option<(&'static str, &'static str, &'static str)>
+where
+    I: IntoIterator<Item = S>,
+    S: Into<String>,
+{
+    let names: Vec<String> = it.into_iter().map(|s| s.into()).collect();
+
+    for (name, header, desc) in PRIMITIVE_DEFINITIONS {
+        if names.contains(&name.to_string()) {
+            return Some((name, header, desc));
         }
     }
 

@@ -4,29 +4,9 @@ use async_language_server::{
     tree_sitter::Node,
     tree_sitter_utils::ts_range_contains_lsp_position,
 };
+use zap_language::docs::get_primitive_names;
 
 const TYPE_KEYWORDS: [&str; 4] = ["struct", "enum", "set", "map"];
-const TYPE_PRIMITIVES: [&str; 19] = [
-    "string",
-    "boolean",
-    "f64",
-    "f32",
-    "u8",
-    "u16",
-    "u32",
-    "i8",
-    "i16",
-    "i32",
-    "CFrame",
-    "AlignedCFrame",
-    "Vector3",
-    "Vector2",
-    "DateTime",
-    "DateTimeMillis",
-    "Color3",
-    "BrickColor",
-    "Instance",
-];
 
 pub fn completion(
     doc: &Document,
@@ -103,9 +83,7 @@ pub fn completion(
             );
 
             items.extend(
-                TYPE_PRIMITIVES
-                    .iter()
-                    .map(|prim| (CompletionItemKind::CLASS, prim.to_string())),
+                get_primitive_names().map(|prim| (CompletionItemKind::CLASS, prim.to_string())),
             );
 
             let root = doc.node_at_root().unwrap();

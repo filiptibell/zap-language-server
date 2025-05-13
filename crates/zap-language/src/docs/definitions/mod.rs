@@ -4,6 +4,19 @@ mod events;
 mod functs;
 mod keywords;
 mod options;
+mod primitives;
+
+pub const INSTANCE_CLASS_FILE: &str = include_str!("./classes.txt");
+pub const INSTANCE_CLASS_NAMES: LazyLock<&'static [&'static str]> = LazyLock::new(|| {
+    let mut names = Vec::new();
+    for line in INSTANCE_CLASS_FILE.lines() {
+        let name = line.trim();
+        if !name.is_empty() {
+            names.push(name);
+        }
+    }
+    names.leak()
+});
 
 #[rustfmt::skip]
 pub const KEYWORD_DEFINITIONS: &[(&str, &str, &str)] = &[
@@ -62,14 +75,25 @@ pub const VARIANT_DEFINITIONS: &[(&str, bool, &[&str])] = &[
 	("yield_type",   true,  &["yield", "future", "promise"]),
 ];
 
-pub const INSTANCE_CLASS_FILE: &str = include_str!("./classes.txt");
-pub const INSTANCE_CLASS_NAMES: LazyLock<&'static [&'static str]> = LazyLock::new(|| {
-    let mut names = Vec::new();
-    for line in INSTANCE_CLASS_FILE.lines() {
-        let name = line.trim();
-        if !name.is_empty() {
-            names.push(name);
-        }
-    }
-    names.leak()
-});
+#[rustfmt::skip]
+pub const PRIMITIVE_DEFINITIONS: &[(&str, &str, &str)] = &[
+	("boolean",        "Booleans",               self::primitives::PRIMITIVE_DESCRIPTION_BOOLEAN),
+	("string",         "Strings",                self::primitives::PRIMITIVE_DESCRIPTION_STRING),
+	("f64",            "Floating Point Numbers", self::primitives::PRIMITIVE_DESCRIPTION_FLOAT),
+	("f32",            "Floating Point Numbers", self::primitives::PRIMITIVE_DESCRIPTION_FLOAT),
+	("u8",             "Unsigned Integers",      self::primitives::PRIMITIVE_DESCRIPTION_UNSIGNED),
+    ("u16",            "Unsigned Integers",      self::primitives::PRIMITIVE_DESCRIPTION_UNSIGNED),
+    ("u32",            "Unsigned Integers",      self::primitives::PRIMITIVE_DESCRIPTION_UNSIGNED),
+    ("i8",             "Signed Integers",        self::primitives::PRIMITIVE_DESCRIPTION_SIGNED),
+    ("i16",            "Signed Integers",        self::primitives::PRIMITIVE_DESCRIPTION_SIGNED),
+    ("i32",            "Signed Integers",        self::primitives::PRIMITIVE_DESCRIPTION_SIGNED),
+    ("CFrame",         "CFrames",                self::primitives::PRIMITIVE_DESCRIPTION_CFRAME),
+    ("AlignedCFrame",  "CFrames",                self::primitives::PRIMITIVE_DESCRIPTION_CFRAME),
+    ("Vector2",        "Vectors",                self::primitives::PRIMITIVE_DESCRIPTION_VECTOR),
+    ("Vector3",        "Vectors",                self::primitives::PRIMITIVE_DESCRIPTION_VECTOR),
+    ("DateTime",       "DateTimes",              self::primitives::PRIMITIVE_DESCRIPTION_DATETIME),
+    ("DateTimeMillis", "DateTimes",              self::primitives::PRIMITIVE_DESCRIPTION_DATETIME),
+    ("BrickColor",     "Colors",                 self::primitives::PRIMITIVE_DESCRIPTION_COLORS),
+    ("Color3",         "Colors",                 self::primitives::PRIMITIVE_DESCRIPTION_COLORS),
+    ("Instance",       "Instances",              self::primitives::PRIMITIVE_DESCRIPTION_INSTANCE),
+];
