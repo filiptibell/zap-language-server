@@ -99,13 +99,16 @@ pub fn get_option_names() -> impl Iterator<Item = &'static str> {
 
 #[rustfmt::skip]
 const VARIANT_DEFINITIONS: &[(&str, bool, &[&str])] = &[
-	("event_from_field",     false, &["Server", "Client"]),
-	("event_type_field",     false, &["Reliable", "Unreliable"]),
-	("event_call_field",     false, &["ManyAsync", "ManySync", "SingleAsync", "SingleSync", "Polling"]),
-	("function_call_field",  false, &["Async", "Sync"]),
-	("call_default",         true,  &["ManyAsync", "ManySync", "SingleAsync", "SingleSync", "Polling"]),
-	("casing",               true,  &["camelCase", "PascalCase", "snake_case"]),
-	("yield_type",           true,  &["yield", "future", "promise"]),
+	// Variants for events and functions are plain idents
+	("event_from_field",    false, &["Server", "Client"]),
+	("event_type_field",    false, &["Reliable", "Unreliable"]),
+	("event_call_field",    false, &["ManyAsync", "ManySync", "SingleAsync", "SingleSync", "Polling"]),
+	("function_call_field", false, &["Async", "Sync"]),
+	// Options variants need to be enclosed in a string,
+	// unlike above, so we give them a special bool flag
+	("call_default", true,  &["ManyAsync", "ManySync", "SingleAsync", "SingleSync", "Polling"]),
+	("casing",       true,  &["camelCase", "PascalCase", "snake_case"]),
+	("yield_type",   true,  &["yield", "future", "promise"]),
 ];
 
 pub fn find_variants<I, S>(it: I) -> Option<(bool, &'static [&'static str])>
