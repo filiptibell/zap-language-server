@@ -95,7 +95,7 @@ impl Server for ZapLanguageServer {
         let parent = parent.as_ref();
 
         let mut items = Vec::new();
-        items.extend(completion_for_options(&doc, &pos, &node, parent));
+        items.extend(completion_for_options(&doc, &pos, &node, parent).await);
         items.extend(completion_for_keywords(&doc, &pos, &node, parent));
         items.extend(completion_for_types(&doc, &pos, &node, parent));
 
