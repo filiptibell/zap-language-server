@@ -9,7 +9,10 @@ use async_language_server::{
 };
 
 use crate::{
-    completions::{completion_for_keywords, completion_for_options, completion_trigger_characters},
+    completions::{
+        completion_for_keywords, completion_for_options, completion_for_types,
+        completion_trigger_characters,
+    },
     hovers::hover_for_options,
 };
 
@@ -94,6 +97,7 @@ impl Server for ZapLanguageServer {
         let mut items = Vec::new();
         items.extend(completion_for_options(&doc, &pos, &node, parent));
         items.extend(completion_for_keywords(&doc, &pos, &node, parent));
+        items.extend(completion_for_types(&doc, &pos, &node, parent));
 
         if items.is_empty() {
             Ok(None)
