@@ -7,6 +7,7 @@ mod options;
 const KEYWORD_DEFINITIONS: &[(&str, &str, &str)] = &[
 	("event",  "Events",    self::keywords::KEYWORD_EVENT_DESCRIPTION),
 	("funct",  "Functions", self::keywords::KEYWORD_FUNCT_DESCRIPTION),
+	("type",   "Types",     self::keywords::KEYWORD_TYPE_DESCRIPTION),
 	("struct", "Structs",   self::keywords::KEYWORD_STRUCT_DESCRIPTION),
 	("enum",   "Enums",     self::keywords::KEYWORD_ENUM_DESCRIPTION),
 	("map",    "Maps",      self::keywords::KEYWORD_MAP_DESCRIPTION),
