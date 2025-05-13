@@ -13,7 +13,7 @@ workspace = true
 
 [features]
 default = []
-tracing = ["async-lsp/tracing"]
+tracing = ["dep:tracing", "async-lsp/tracing"]
 tree-sitter = ["dep:tree-sitter"]
 
 [dependencies]
