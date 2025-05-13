@@ -146,7 +146,7 @@ impl Document {
     }
 
     /**
-        Returns a [`Node`] at the given position, if one exists.
+        Returns a [`Node`] at the given LSP position, if one exists.
     */
     #[must_use]
     pub fn node_at_position(&self, position: Position) -> Option<Node> {
@@ -159,37 +159,6 @@ impl Document {
 
         tree.root_node()
             .named_descendant_for_point_range(point, point)
-    }
-
-    /**
-        Returns a triple of three [`Node`] at the given position, if they exist.
-
-        The returned nodes will be the following:
-
-        - The top-level node, which is an immediate child of the tree root
-        - The parent of the node at the position
-        - The node at the position
-    */
-    #[must_use]
-    pub fn node_triple_at_position(&self, pos: Position) -> Option<(Node, Node, Node)> {
-        let root = self.node_at_root()?;
-        let node = self.node_at_position(pos)?;
-        let parent = node.parent()?;
-
-        let mut top_level = parent;
-        while let Some(parent) = top_level.parent() {
-            if parent == root {
-                break;
-            } else {
-                top_level = parent;
-            }
-        }
-
-        if top_level == parent {
-            return None;
-        }
-
-        Some((top_level, parent, node))
     }
 
     /**
