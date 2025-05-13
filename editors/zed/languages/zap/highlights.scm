@@ -74,11 +74,11 @@
 (function_declaration
   name: (identifier) @function)
 
-(enum_variant
+(enum_tagged_variant
   name: (identifier) @enum.variant)
 
 ; Fields and Properties
-(struct_field
+(property
   name: (identifier) @property)
 
 (event_data_tuple
@@ -92,8 +92,6 @@
 (function_call_field "call" @property)
 (function_args_field "args" @property)
 (function_rets_field "rets" @property)
-
-(unknown_field (identifier) @property)
 
 ; Literals
 ["true" "false"] @boolean

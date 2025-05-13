@@ -2,7 +2,7 @@
 [
   (struct_type)
   (enum_type)
-  (enum_variant_fields)
+  (enum_tagged_variant)
   (event_declaration)
   (function_declaration)
 ] @fold

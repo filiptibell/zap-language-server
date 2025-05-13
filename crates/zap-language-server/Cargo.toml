@@ -20,4 +20,4 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 async-language-server = { path = "../async-language-server", features = ["tree-sitter"] }
-tree-sitter-zap = { git = "https://github.com/filiptibell/tree-sitter-zap", rev = "5e5bb08c91b0ddc3b3f6fde7eeb1a6633473b4b3" }
+tree-sitter-zap = { git = "https://github.com/filiptibell/tree-sitter-zap", rev = "e3a1ee151bdefdd214b51b389386d391d62e2693" }

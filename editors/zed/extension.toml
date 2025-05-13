@@ -8,7 +8,7 @@ repository = "https://github.com/filiptibell/zap-language"
 
 [grammars.zap]
 repository = "https://github.com/filiptibell/tree-sitter-zap"
-rev = "5e5bb08c91b0ddc3b3f6fde7eeb1a6633473b4b3"
+rev = "e3a1ee151bdefdd214b51b389386d391d62e2693"
 
 [language_servers.zap-language-server]
 name = "Zap Language Server"
