@@ -32,13 +32,13 @@ where
 
 #[rustfmt::skip]
 const PROPERTY_DEFINITIONS: &[(&str, &str, &str)] = &[
-	("event_from_field",     "from",      self::events::EVENT_FIELD_DESCRIPTION_FROM),
-	("event_type_field",     "type",      self::events::EVENT_FIELD_DESCRIPTION_TYPE),
-	("event_call_field",     "call",      self::events::EVENT_FIELD_DESCRIPTION_CALL),
-	("event_data_field",     "data",      self::events::EVENT_FIELD_DESCRIPTION_DATA),
-	("function_call_field",  "call",      self::functs::FUNCT_FIELD_DESCRIPTION_CALL),
-	("function_args_field",  "args",      self::functs::FUNCT_FIELD_DESCRIPTION_ARGS),
-	("function_rets_field",  "rets",      self::functs::FUNCT_FIELD_DESCRIPTION_RETS),
+	("event_from_field",     "from", self::events::EVENT_FIELD_DESCRIPTION_FROM),
+	("event_type_field",     "type", self::events::EVENT_FIELD_DESCRIPTION_TYPE),
+	("event_call_field",     "call", self::events::EVENT_FIELD_DESCRIPTION_CALL),
+	("event_data_field",     "data", self::events::EVENT_FIELD_DESCRIPTION_DATA),
+	("function_call_field",  "call", self::functs::FUNCT_FIELD_DESCRIPTION_CALL),
+	("function_args_field",  "args", self::functs::FUNCT_FIELD_DESCRIPTION_ARGS),
+	("function_rets_field",  "rets", self::functs::FUNCT_FIELD_DESCRIPTION_RETS),
 ];
 
 pub fn find_property<I, S>(it: I) -> Option<(&'static str, &'static str)>
