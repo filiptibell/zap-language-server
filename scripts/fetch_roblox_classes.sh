@@ -1,7 +1,7 @@
 #!/bin/bash
 
 URL="https://raw.githubusercontent.com/MaximumADHD/Roblox-Client-Tracker/refs/heads/roblox/API-Dump.json"
-OUTPUT_FILE="crates/zap-language-server/src/docs/roblox-class-names.txt"
+OUTPUT_FILE="crates/zap-language-server/src/docs/definitions/instances.txt"
 
 if ! command -v jq &> /dev/null; then
     echo "jq is not installed"
