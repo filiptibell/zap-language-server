@@ -2,17 +2,12 @@ use async_language_server::{
     lsp_types::{Hover, HoverContents, MarkedString, Position},
     server::Document,
     tree_sitter::Node,
-    tree_sitter_utils::ts_range_to_lsp_range,
+    tree_sitter_utils::{ts_range_contains_lsp_position, ts_range_to_lsp_range},
 };
 
 use crate::docs::find_keyword;
 
-pub fn hover(
-    doc: &Document,
-    _pos: &Position,
-    node: &Node,
-    _parent: Option<&Node>,
-) -> Option<Hover> {
+pub fn hover(doc: &Document, pos: &Position, node: &Node, _parent: Option<&Node>) -> Option<Hover> {
     let mut node = node.clone();
 
     // When hovering over type declarations of some kind, the actual
@@ -30,6 +25,9 @@ pub fn hover(
             | "enum_tagged_type"
     ) {
         node = node.child(0)?;
+        if !ts_range_contains_lsp_position(node.range(), pos.clone()) {
+            return None; // Probably hovering over '{}' or '=', not the keyword
+        }
     }
 
     let text = doc.text().byte_slice(node.byte_range());
