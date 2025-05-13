@@ -64,21 +64,32 @@ pub fn completion(
     // and will just need to make sure, then we can complete type names
     let in_set_or_map = matches!(node.kind(), "set_type" | "map_type");
 
-    // We might be in the data field for an event, or args/rets for a function,
+    // We might be in some kind of property field (or data / args / rets),
     // and will just need to make sure, then we can complete type names
-    let in_event_or_function = matches!(
+    let in_property = matches!(
         node.kind(),
-        "event_data_field" | "function_args_field" | "function_rets_field"
+        "property" | "event_data_field" | "function_args_field" | "function_rets_field"
     );
 
-    if in_type_decl || in_set_or_map || in_event_or_function {
-        let mut ident = None;
-        let mut cursor = node.walk();
-        for child in node.children(&mut cursor) {
-            if child.kind() == "identifier" {
-                if ts_range_contains_lsp_position(child.range(), pos) {
-                    ident = Some(child);
-                    break;
+    if in_type_decl || in_set_or_map || in_property {
+        let mut ident = node.child_by_field_name("type");
+
+        if let Some(ident_range) = ident.as_ref().map(|i| i.range()) {
+            // Properties have a "type" field, which must be the one we're completing,
+            // otherwise we'd be completing identifiers when inside the property name
+            if !ts_range_contains_lsp_position(ident_range, pos) {
+                ident = None;
+            }
+        } else {
+            // Not a property, meaning we are in data / args / rets, which only
+            // have a single identifier, and that is guaranteed to be the type
+            let mut cursor = node.walk();
+            for child in node.children(&mut cursor) {
+                if child.kind() == "identifier" {
+                    if ts_range_contains_lsp_position(child.range(), pos) {
+                        ident = Some(child);
+                        break;
+                    }
                 }
             }
         }
