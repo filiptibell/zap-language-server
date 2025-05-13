@@ -13,7 +13,7 @@ use crate::{
         completion_for_instances, completion_for_keywords, completion_for_options,
         completion_for_types, completion_trigger_characters,
     },
-    hovers::{hover_for_keywords, hover_for_options, hover_for_properties},
+    hovers::{hover_for_keywords, hover_for_options, hover_for_properties, hover_for_types},
 };
 
 #[derive(Debug, Clone)]
@@ -73,9 +73,10 @@ impl Server for ZapLanguageServer {
         let parent = node.parent();
         let parent = parent.as_ref();
 
-        Ok(hover_for_options(&doc, &pos, &node, parent)
-            .or_else(|| hover_for_keywords(&doc, &pos, &node, parent))
-            .or_else(|| hover_for_properties(&doc, &pos, &node, parent)))
+        Ok(hover_for_keywords(&doc, &pos, &node, parent)
+            .or_else(|| hover_for_types(&doc, &pos, &node, parent))
+            .or_else(|| hover_for_properties(&doc, &pos, &node, parent))
+            .or_else(|| hover_for_options(&doc, &pos, &node, parent)))
     }
 
     async fn completion(
@@ -97,10 +98,10 @@ impl Server for ZapLanguageServer {
         let parent = parent.as_ref();
 
         let mut items = Vec::new();
-        items.extend(completion_for_options(&doc, &pos, &node, parent).await);
         items.extend(completion_for_keywords(&doc, &pos, &node, parent));
         items.extend(completion_for_types(&doc, &pos, &node, parent));
         items.extend(completion_for_instances(&doc, &pos, &node, parent));
+        items.extend(completion_for_options(&doc, &pos, &node, parent).await);
 
         if items.is_empty() {
             Ok(None)
