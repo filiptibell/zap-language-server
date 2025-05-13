@@ -9,11 +9,12 @@ use async_lsp::{
         CodeAction, CodeActionOrCommand, CodeActionParams, CompletionItem, CompletionParams,
         CompletionResponse, DidChangeConfigurationParams, DidChangeTextDocumentParams,
         DidCloseTextDocumentParams, DidOpenTextDocumentParams, DidSaveTextDocumentParams,
-        GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverParams, InitializeParams,
-        InitializeResult, InitializedParams, Location, PositionEncodingKind, PrepareRenameResponse,
-        ReferenceParams, RenameParams, SaveOptions, TextDocumentPositionParams,
-        TextDocumentSyncCapability, TextDocumentSyncKind, TextDocumentSyncOptions,
-        TextDocumentSyncSaveOptions, WorkspaceEdit,
+        DocumentLink, DocumentLinkParams, GotoDefinitionParams, GotoDefinitionResponse, Hover,
+        HoverParams, InitializeParams, InitializeResult, InitializedParams, Location,
+        PositionEncodingKind, PrepareRenameResponse, ReferenceParams, RenameParams, SaveOptions,
+        TextDocumentPositionParams, TextDocumentSyncCapability, TextDocumentSyncKind,
+        TextDocumentSyncOptions, TextDocumentSyncSaveOptions, WorkspaceEdit,
+        request::{GotoDeclarationParams, GotoDeclarationResponse},
     },
 };
 
@@ -130,7 +131,7 @@ impl<T: Server + Send + Sync + 'static> LanguageServer for LanguageServerWithSta
         self.state.handle_document_save::<T>(params)
     }
 
-    // Forwarding for: Hover, Completion, Code Action
+    // Forwarding for: Hover, Completion, Code Action, Document Link
 
     fn hover(
         &mut self,
@@ -177,7 +178,34 @@ impl<T: Server + Send + Sync + 'static> LanguageServer for LanguageServerWithSta
         Box::pin(async move { Ok(server.code_action_resolve(state, item).await?) })
     }
 
-    // Forwarding for: Definition, References, Rename
+    fn document_link(
+        &mut self,
+        params: DocumentLinkParams,
+    ) -> BoxFuture<'static, Result<Option<Vec<DocumentLink>>, Self::Error>> {
+        let server = Arc::clone(&self.server);
+        let state = self.state.clone();
+        Box::pin(async move { Ok(server.link(state, params).await?) })
+    }
+
+    fn document_link_resolve(
+        &mut self,
+        link: DocumentLink,
+    ) -> BoxFuture<'static, Result<DocumentLink, Self::Error>> {
+        let server = Arc::clone(&self.server);
+        let state = self.state.clone();
+        Box::pin(async move { Ok(server.link_resolve(state, link).await?) })
+    }
+
+    // Forwarding for: Declaration, definition, References, Rename
+
+    fn declaration(
+        &mut self,
+        params: GotoDeclarationParams,
+    ) -> BoxFuture<'static, Result<Option<GotoDeclarationResponse>, Self::Error>> {
+        let server = Arc::clone(&self.server);
+        let state = self.state.clone();
+        Box::pin(async move { Ok(server.declaration(state, params).await?) })
+    }
 
     fn definition(
         &mut self,

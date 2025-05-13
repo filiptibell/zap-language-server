@@ -7,9 +7,11 @@ use async_lsp::{
     ErrorCode,
     lsp_types::{
         ClientCapabilities, CodeAction, CodeActionParams, CodeActionResponse, CompletionItem,
-        CompletionParams, CompletionResponse, GotoDefinitionParams, GotoDefinitionResponse, Hover,
-        HoverParams, Location, PrepareRenameResponse, ReferenceParams, RenameParams,
-        ServerCapabilities, ServerInfo, TextDocumentPositionParams, Url, WorkspaceEdit,
+        CompletionParams, CompletionResponse, DocumentLink, DocumentLinkParams,
+        GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverParams, Location,
+        PrepareRenameResponse, ReferenceParams, RenameParams, ServerCapabilities, ServerInfo,
+        TextDocumentPositionParams, Url, WorkspaceEdit,
+        request::{GotoDeclarationParams, GotoDeclarationResponse},
     },
 };
 
@@ -45,7 +47,7 @@ pub trait Server {
         None
     }
 
-    // Hover, Completion, Code Action
+    // Hover, Completion, Code Action, Document Link
 
     fn hover(
         &self,
@@ -87,7 +89,31 @@ pub trait Server {
         async move { Ok(action) }
     }
 
-    // Definition, References, Rename
+    fn link(
+        &self,
+        state: ServerState,
+        params: DocumentLinkParams,
+    ) -> impl Future<Output = ServerResult<Option<Vec<DocumentLink>>>> + Send {
+        method_not_implemented("link")
+    }
+
+    fn link_resolve(
+        &self,
+        state: ServerState,
+        link: DocumentLink,
+    ) -> impl Future<Output = ServerResult<DocumentLink>> + Send {
+        async move { Ok(link) }
+    }
+
+    // Declaration, Definition, References, Rename
+
+    fn declaration(
+        &self,
+        state: ServerState,
+        params: GotoDeclarationParams,
+    ) -> impl Future<Output = ServerResult<Option<GotoDeclarationResponse>>> + Send {
+        method_not_implemented("declaration")
+    }
 
     fn definition(
         &self,
