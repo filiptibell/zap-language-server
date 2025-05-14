@@ -147,12 +147,6 @@ impl Document {
 
     /**
         Returns a [`Node`] at the given LSP position, if one exists.
-
-        This uses **inclusive** bounds checks, meaning that points are
-        considered *inside* even if they lie on a line or column boundary.
-
-        In a real-world scenario, this means that when the position is on a space
-        character after a word, the node returned will still be the word itself.
     */
     #[must_use]
     pub fn node_at_position(&self, position: Position) -> Option<Node> {
@@ -164,6 +158,22 @@ impl Document {
         };
 
         tree.root_node().descendant_for_point_range(point, point)
+    }
+
+    /**
+        Similar to [`node_at_position`], except the node must be named.
+    */
+    #[must_use]
+    pub fn node_at_position_named(&self, position: Position) -> Option<Node> {
+        let tree = self.tree_sitter_tree.as_ref()?;
+
+        let point = tree_sitter::Point {
+            row: position.line as usize,
+            column: position.character as usize,
+        };
+
+        tree.root_node()
+            .named_descendant_for_point_range(point, point)
     }
 
     /**

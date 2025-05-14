@@ -68,7 +68,7 @@ impl Server for ZapLanguageServer {
         let Some(doc) = state.document(&url) else {
             return Ok(None);
         };
-        let Some(node) = doc.node_at_position(pos) else {
+        let Some(node) = doc.node_at_position_named(pos) else {
             tracing::debug!("Missing node for hover at {}:{}", pos.line, pos.character);
             return Ok(None);
         };
@@ -100,7 +100,7 @@ impl Server for ZapLanguageServer {
         let Some(doc) = state.document(&url) else {
             return Ok(None);
         };
-        let Some(node) = doc.node_at_position(pos) else {
+        let Some(node) = doc.node_at_position_named(pos) else {
             tracing::debug!(
                 "Missing node for completion at {}:{}",
                 pos.line,
@@ -152,7 +152,7 @@ impl Server for ZapLanguageServer {
         let Some(doc) = state.document(&url) else {
             return Ok(None);
         };
-        let Some(node) = doc.node_at_position(pos) else {
+        let Some(node) = doc.node_at_position_named(pos) else {
             return Ok(None);
         };
 
