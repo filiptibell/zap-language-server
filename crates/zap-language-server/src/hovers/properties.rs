@@ -7,8 +7,8 @@ use async_language_server::{
 
 use zap_language::docs::find_property;
 
-pub fn hover(_doc: &Document, _pos: Position, node: Node, parent: Option<Node>) -> Option<Hover> {
-    let parent = parent?;
+pub fn hover(_doc: &Document, _pos: Position, node: Node) -> Option<Hover> {
+    let parent = node.parent()?;
 
     if let Some((head, desc)) = find_property([parent.kind(), node.kind()]) {
         return Some(Hover {

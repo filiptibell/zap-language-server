@@ -73,20 +73,17 @@ impl Server for ZapLanguageServer {
             return Ok(None);
         };
 
-        let parent = node.parent();
-        let parent = parent.as_ref();
-
         let text = doc.text().byte_slice(node.byte_range());
         tracing::debug!(
-            "Hovering over node at {}:{} with contents '{text}'",
+            "Getting hover for node at {}:{} with contents '{text}'",
             pos.line,
             pos.character
         );
 
-        Ok(hover_for_keywords(&doc, pos, node, parent.copied())
-            .or_else(|| hover_for_types(&doc, pos, node, parent.copied()))
-            .or_else(|| hover_for_properties(&doc, pos, node, parent.copied()))
-            .or_else(|| hover_for_options(&doc, pos, node, parent.copied())))
+        Ok(hover_for_keywords(&doc, pos, node)
+            .or_else(|| hover_for_types(&doc, pos, node))
+            .or_else(|| hover_for_properties(&doc, pos, node))
+            .or_else(|| hover_for_options(&doc, pos, node)))
     }
 
     async fn completion(
@@ -109,21 +106,18 @@ impl Server for ZapLanguageServer {
             return Ok(None);
         };
 
-        let parent = node.parent();
-        let parent = parent.as_ref();
-
         let text = doc.text().byte_slice(node.byte_range());
         tracing::debug!(
-            "Completing for node at {}:{} with contents '{text}'",
+            "Getting completions for node at {}:{} with contents '{text}'",
             pos.line,
             pos.character
         );
 
         let mut items = Vec::new();
-        items.extend(completion_for_keywords(&doc, pos, node, parent.copied()));
-        items.extend(completion_for_types(&doc, pos, node, parent.copied()));
-        items.extend(completion_for_instances(&doc, pos, node, parent.copied()));
-        items.extend(completion_for_options(&doc, pos, node, parent.copied()).await);
+        items.extend(completion_for_keywords(&doc, pos, node));
+        items.extend(completion_for_types(&doc, pos, node));
+        items.extend(completion_for_instances(&doc, pos, node));
+        items.extend(completion_for_options(&doc, pos, node).await);
 
         if items.is_empty() {
             Ok(None)
@@ -153,12 +147,21 @@ impl Server for ZapLanguageServer {
             return Ok(None);
         };
         let Some(node) = doc.node_at_position_named(pos) else {
+            tracing::debug!(
+                "Missing node for definition at {}:{}",
+                pos.line,
+                pos.character
+            );
             return Ok(None);
         };
 
-        let parent = node.parent();
-        let parent = parent.as_ref();
+        let text = doc.text().byte_slice(node.byte_range());
+        tracing::debug!(
+            "Getting definition for node at {}:{} with contents '{text}'",
+            pos.line,
+            pos.character
+        );
 
-        Ok(definition_for_types(&doc, pos, node, parent.copied()))
+        Ok(definition_for_types(&doc, pos, node))
     }
 }

@@ -74,10 +74,10 @@ pub const fn lsp_position_to_ts_point(pos: LspPosition) -> TsPoint {
 #[must_use]
 pub fn find_child<'a, F>(node: Node<'a>, predicate: F) -> Option<Node<'a>>
 where
-    F: Fn(&Node<'a>) -> bool,
+    F: Fn(Node<'a>) -> bool,
 {
     let mut cursor = node.walk();
-    node.children(&mut cursor).find(|&child| predicate(&child))
+    node.children(&mut cursor).find(|child| predicate(*child))
 }
 
 /**
@@ -86,12 +86,12 @@ where
 #[must_use]
 pub fn find_ancestor<'a, F>(node: Node<'a>, predicate: F) -> Option<Node<'a>>
 where
-    F: Fn(&Node<'a>) -> bool,
+    F: Fn(Node<'a>) -> bool,
 {
     let mut current = node.parent();
 
     while let Some(node) = current {
-        if predicate(&node) {
+        if predicate(node) {
             return Some(node);
         }
         current = node.parent();
@@ -108,13 +108,13 @@ where
 #[must_use]
 pub fn find_descendant<'a, F>(node: Node<'a>, predicate: F) -> Option<Node<'a>>
 where
-    F: Fn(&Node<'a>) -> bool,
+    F: Fn(Node<'a>) -> bool,
 {
     let mut cursor = node.walk();
     let mut stack = VecDeque::from([node]);
 
     while let Some(current) = stack.pop_front() {
-        if predicate(&current) {
+        if predicate(current) {
             return Some(current);
         }
         for child in current.children(&mut cursor) {

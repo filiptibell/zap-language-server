@@ -7,7 +7,7 @@ use async_language_server::{
 
 use zap_language::docs::find_keyword;
 
-pub fn hover(doc: &Document, pos: Position, node: Node, _parent: Option<Node>) -> Option<Hover> {
+pub fn hover(doc: &Document, pos: Position, node: Node) -> Option<Hover> {
     let mut node = node;
 
     // When hovering over type declarations of some kind, the actual
