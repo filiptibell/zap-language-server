@@ -83,10 +83,10 @@ impl Server for ZapLanguageServer {
             pos.character
         );
 
-        Ok(hover_for_keywords(&doc, &pos, &node, parent)
-            .or_else(|| hover_for_types(&doc, &pos, &node, parent))
-            .or_else(|| hover_for_properties(&doc, &pos, &node, parent))
-            .or_else(|| hover_for_options(&doc, &pos, &node, parent)))
+        Ok(hover_for_keywords(&doc, pos, node, parent.copied())
+            .or_else(|| hover_for_types(&doc, pos, node, parent.copied()))
+            .or_else(|| hover_for_properties(&doc, pos, node, parent.copied()))
+            .or_else(|| hover_for_options(&doc, pos, node, parent.copied())))
     }
 
     async fn completion(
@@ -120,10 +120,10 @@ impl Server for ZapLanguageServer {
         );
 
         let mut items = Vec::new();
-        items.extend(completion_for_keywords(&doc, &pos, &node, parent));
-        items.extend(completion_for_types(&doc, &pos, &node, parent));
-        items.extend(completion_for_instances(&doc, &pos, &node, parent));
-        items.extend(completion_for_options(&doc, &pos, &node, parent).await);
+        items.extend(completion_for_keywords(&doc, pos, node, parent.copied()));
+        items.extend(completion_for_types(&doc, pos, node, parent.copied()));
+        items.extend(completion_for_instances(&doc, pos, node, parent.copied()));
+        items.extend(completion_for_options(&doc, pos, node, parent.copied()).await);
 
         if items.is_empty() {
             Ok(None)
@@ -159,6 +159,6 @@ impl Server for ZapLanguageServer {
         let parent = node.parent();
         let parent = parent.as_ref();
 
-        Ok(definition_for_types(&doc, &pos, &node, parent))
+        Ok(definition_for_types(&doc, pos, node, parent.copied()))
     }
 }

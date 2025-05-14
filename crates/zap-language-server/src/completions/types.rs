@@ -10,14 +10,12 @@ const TYPE_KEYWORDS: [&str; 4] = ["struct", "enum", "set", "map"];
 
 pub fn completion(
     doc: &Document,
-    pos: &Position,
-    node: &Node,
-    parent: Option<&Node>,
+    pos: Position,
+    node: Node,
+    parent: Option<Node>,
 ) -> Vec<(CompletionItemKind, String)> {
-    let pos = *pos;
-
-    let mut parent = parent.copied();
-    let mut node = *node;
+    let mut node = node;
+    let mut parent = parent;
 
     // If our current node is the top-level "source file" we can
     // probably drill down to something a bit more specific & useful

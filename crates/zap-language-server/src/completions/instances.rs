@@ -9,14 +9,12 @@ use zap_language::docs::get_instance_class_names;
 
 pub fn completion(
     doc: &Document,
-    pos: &Position,
-    node: &Node,
-    parent: Option<&Node>,
+    pos: Position,
+    node: Node,
+    parent: Option<Node>,
 ) -> Vec<(CompletionItemKind, String)> {
-    let pos = *pos;
-
-    let mut parent = parent.copied();
-    let mut node = *node;
+    let mut node = node;
+    let mut parent = parent;
 
     // If our current node is the top-level "primitive type" we can
     // probably drill down to something a bit more specific & useful

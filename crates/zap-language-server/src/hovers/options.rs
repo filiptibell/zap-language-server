@@ -7,12 +7,7 @@ use async_language_server::{
 
 use zap_language::docs::find_option;
 
-pub fn hover(
-    doc: &Document,
-    _pos: &Position,
-    node: &Node,
-    _parent: Option<&Node>,
-) -> Option<Hover> {
+pub fn hover(doc: &Document, _pos: Position, node: Node, _parent: Option<Node>) -> Option<Hover> {
     let text = doc.text().byte_slice(node.byte_range());
 
     if let Some((name, _, desc)) = find_option([text]) {

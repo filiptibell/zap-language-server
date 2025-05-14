@@ -6,13 +6,12 @@ use async_language_server::{
 };
 use zap_language::docs::find_primitive;
 
-pub fn hover(doc: &Document, pos: &Position, node: &Node, parent: Option<&Node>) -> Option<Hover> {
+pub fn hover(doc: &Document, pos: Position, node: Node, parent: Option<Node>) -> Option<Hover> {
     if !matches!(node.kind(), "identifier" | "primitive_type") {
         return None;
     }
 
-    let parent = *parent?;
-    let pos = *pos;
+    let parent = parent?;
     let text = doc.text().byte_slice(node.byte_range());
 
     if let Some((_, header, desc)) = find_primitive([text]) {
@@ -57,7 +56,7 @@ pub fn hover(doc: &Document, pos: &Position, node: &Node, parent: Option<&Node>)
             }
         }
 
-        if ident.is_some_and(|i| i == *node) {
+        if ident.is_some_and(|i| i == node) {
             let node_text = doc.text().byte_slice(node.byte_range());
 
             let root = doc.node_at_root()?;

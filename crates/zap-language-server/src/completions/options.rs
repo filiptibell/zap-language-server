@@ -14,15 +14,10 @@ use zap_language::docs::{find_option, find_variants, get_option_names};
 
 pub async fn completion(
     doc: &Document,
-    pos: &Position,
-    node: &Node<'_>,
-    parent: Option<&Node<'_>>,
+    pos: Position,
+    mut node: Node<'_>,
+    mut parent: Option<Node<'_>>,
 ) -> Vec<(CompletionItemKind, String)> {
-    let pos = *pos;
-
-    let mut node = *node;
-    let mut parent = parent.copied();
-
     // If our current node is the top-level "source file" we can
     // probably drill down to something a bit more specific & useful
     if node.kind() == "source_file" {

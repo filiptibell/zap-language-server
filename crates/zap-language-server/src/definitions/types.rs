@@ -9,9 +9,9 @@ use crate::utils::is_type_reference;
 
 pub fn definition(
     doc: &Document,
-    _pos: &Position,
-    node: &Node,
-    _parent: Option<&Node>,
+    _pos: Position,
+    node: Node,
+    _parent: Option<Node>,
 ) -> Option<GotoDefinitionResponse> {
     let node_text = doc.text().slice(node.byte_range());
     if node_text.as_str().is_none_or(str::is_empty) || !is_type_reference(node) {

@@ -7,8 +7,8 @@ use async_language_server::{
 
 use zap_language::docs::find_keyword;
 
-pub fn hover(doc: &Document, pos: &Position, node: &Node, _parent: Option<&Node>) -> Option<Hover> {
-    let mut node = *node;
+pub fn hover(doc: &Document, pos: Position, node: Node, _parent: Option<Node>) -> Option<Hover> {
+    let mut node = node;
 
     // When hovering over type declarations of some kind, the actual
     // node target will be the entire declaration, we need to descend
@@ -25,7 +25,7 @@ pub fn hover(doc: &Document, pos: &Position, node: &Node, _parent: Option<&Node>
             | "enum_tagged_type"
     ) {
         node = node.child(0)?;
-        if !ts_range_contains_lsp_position(node.range(), *pos) {
+        if !ts_range_contains_lsp_position(node.range(), pos) {
             return None; // Probably hovering over '{}' or '=', not the keyword
         }
     }
