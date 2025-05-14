@@ -7,10 +7,11 @@ use async_lsp::lsp_types::Url;
 use ropey::Rope;
 
 #[cfg(feature = "tree-sitter")]
-use async_lsp::lsp_types::{Position, Range};
-
-#[cfg(feature = "tree-sitter")]
-use tree_sitter::{Language, Node, Tree};
+use {
+    crate::tree_sitter_utils::{lsp_position_to_ts_point, ts_range_to_lsp_range},
+    async_lsp::lsp_types::{Position, Range},
+    tree_sitter::{Language, Node, Query, QueryCursor, StreamingIterator, Tree},
+};
 
 /**
     A document tracked by the language server, containing
@@ -150,14 +151,9 @@ impl Document {
     */
     #[must_use]
     pub fn node_at_position(&self, position: Position) -> Option<Node> {
-        let tree = self.tree_sitter_tree.as_ref()?;
-
-        let point = tree_sitter::Point {
-            row: position.line as usize,
-            column: position.character as usize,
-        };
-
-        tree.root_node().descendant_for_point_range(point, point)
+        let root = self.node_at_root()?;
+        let point = lsp_position_to_ts_point(position);
+        root.descendant_for_point_range(point, point)
     }
 
     /**
@@ -165,15 +161,9 @@ impl Document {
     */
     #[must_use]
     pub fn node_at_position_named(&self, position: Position) -> Option<Node> {
-        let tree = self.tree_sitter_tree.as_ref()?;
-
-        let point = tree_sitter::Point {
-            row: position.line as usize,
-            column: position.character as usize,
-        };
-
-        tree.root_node()
-            .named_descendant_for_point_range(point, point)
+        let root = self.node_at_root()?;
+        let point = lsp_position_to_ts_point(position);
+        root.named_descendant_for_point_range(point, point)
     }
 
     /**
@@ -183,11 +173,6 @@ impl Document {
     */
     #[must_use]
     pub fn query(&self, query: impl AsRef<str>) -> Option<Vec<DocumentQueryCapture>> {
-        use crate::{
-            tree_sitter::{Query, QueryCursor, StreamingIterator},
-            tree_sitter_utils::ts_range_to_lsp_range,
-        };
-
         let lang = self.tree_sitter_lang.as_ref()?;
         let tree = self.tree_sitter_tree.as_ref()?;
 
