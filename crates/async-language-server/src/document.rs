@@ -1,6 +1,3 @@
-#![allow(clippy::cast_possible_truncation)]
-#![allow(clippy::items_after_statements)]
-
 use std::io::{Read, Result, Write};
 
 use async_lsp::lsp_types::Url;

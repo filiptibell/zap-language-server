@@ -8,6 +8,7 @@ use tree_sitter::{Node, Point as TsPoint, Range as TsRange};
 */
 #[must_use]
 pub const fn ts_point_to_lsp_position(pos: TsPoint) -> LspPosition {
+    #[allow(clippy::cast_possible_truncation)]
     LspPosition {
         line: pos.row as u32,
         character: pos.column as u32,
@@ -76,12 +77,7 @@ where
     F: Fn(&Node<'a>) -> bool,
 {
     let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        if predicate(&child) {
-            return Some(child);
-        }
-    }
-    None
+    node.children(&mut cursor).find(|&child| predicate(&child))
 }
 
 /**

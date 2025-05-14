@@ -1,3 +1,5 @@
+#![allow(clippy::trivially_copy_pass_by_ref)]
+
 mod cli;
 mod completions;
 mod definitions;

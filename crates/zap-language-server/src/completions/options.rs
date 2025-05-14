@@ -18,22 +18,22 @@ pub async fn completion(
     node: &Node<'_>,
     parent: Option<&Node<'_>>,
 ) -> Vec<(CompletionItemKind, String)> {
-    let pos = pos.clone();
+    let pos = *pos;
 
-    let mut node = node.clone();
-    let mut parent = parent.cloned();
+    let mut node = *node;
+    let mut parent = parent.copied();
 
     // If our current node is the top-level "source file" we can
     // probably drill down to something a bit more specific & useful
     if node.kind() == "source_file" {
         let mut cursor = node.walk();
         for child in node.children(&mut cursor) {
-            if child.kind() == "option_declaration" {
-                if ts_range_contains_lsp_position(child.range(), pos) {
-                    parent = Some(node);
-                    node = child;
-                    break;
-                }
+            if child.kind() == "option_declaration"
+                && ts_range_contains_lsp_position(child.range(), pos)
+            {
+                parent = Some(node);
+                node = child;
+                break;
             }
         }
     }
@@ -99,8 +99,8 @@ pub async fn completion(
                         // Option variants - must also be enclosed in strings
                         if let Some((true, variants)) = find_variants([ident]) {
                             if node.kind() == "string" {
-                                items.extend(variants.into_iter().map(|variant| {
-                                    (CompletionItemKind::ENUM_MEMBER, variant.to_string())
+                                items.extend(variants.iter().map(|variant| {
+                                    (CompletionItemKind::ENUM_MEMBER, (*variant).to_string())
                                 }));
                             }
                         }
@@ -122,7 +122,7 @@ pub async fn completion(
                         );
                     }
                 }
-            };
+            }
         }
     }
 
@@ -137,7 +137,7 @@ async fn gather_cwd_completion_directories(path: &Path) -> Option<Vec<String>> {
     let mut reader = tokio::fs::read_dir(path).await.ok()?;
 
     while let Ok(Some(item)) = reader.next_entry().await {
-        if let Some(meta) = item.metadata().await.ok() {
+        if let Ok(meta) = item.metadata().await {
             if meta.is_dir() {
                 if let Some(name) = item.file_name().to_str() {
                     items.push(name.to_string());

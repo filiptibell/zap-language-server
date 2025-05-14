@@ -13,8 +13,8 @@ pub fn hover(
     node: &Node,
     parent: Option<&Node>,
 ) -> Option<Hover> {
-    let parent = parent?.clone();
-    let node = node.clone();
+    let parent = *parent?;
+    let node = *node;
 
     if let Some((head, desc)) = find_property([parent.kind(), node.kind()]) {
         return Some(Hover {

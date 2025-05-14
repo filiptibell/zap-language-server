@@ -7,7 +7,7 @@ mod options;
 mod primitives;
 
 pub const INSTANCE_CLASS_FILE: &str = include_str!("./classes.txt");
-pub const INSTANCE_CLASS_NAMES: LazyLock<&'static [&'static str]> = LazyLock::new(|| {
+pub static INSTANCE_CLASS_NAMES: LazyLock<&'static [&'static str]> = LazyLock::new(|| {
     let mut names = Vec::new();
     for line in INSTANCE_CLASS_FILE.lines() {
         let name = line.trim();

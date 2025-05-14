@@ -13,22 +13,20 @@ pub fn completion(
     node: &Node,
     parent: Option<&Node>,
 ) -> Vec<(CompletionItemKind, String)> {
-    let pos = pos.clone();
+    let pos = *pos;
 
-    let mut parent = parent.cloned();
-    let mut node = node.clone();
+    let mut parent = parent.copied();
+    let mut node = *node;
 
     // If our current node is the top-level "source file" we can
     // probably drill down to something a bit more specific & useful
     if node.kind() == "source_file" {
         let mut cursor = node.walk();
         for child in node.children(&mut cursor) {
-            if child.kind() == "identifier" {
-                if ts_range_contains_lsp_position(child.range(), pos) {
-                    parent = Some(node);
-                    node = child;
-                    break;
-                }
+            if child.kind() == "identifier" && ts_range_contains_lsp_position(child.range(), pos) {
+                parent = Some(node);
+                node = child;
+                break;
             }
         }
     }
@@ -43,7 +41,7 @@ pub fn completion(
         items.extend(
             KEYWORDS
                 .iter()
-                .map(|word| (CompletionItemKind::KEYWORD, word.to_string())),
+                .map(|word| (CompletionItemKind::KEYWORD, (*word).to_string())),
         );
     }
 

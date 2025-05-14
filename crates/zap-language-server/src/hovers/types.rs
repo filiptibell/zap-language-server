@@ -11,8 +11,8 @@ pub fn hover(doc: &Document, pos: &Position, node: &Node, parent: Option<&Node>)
         return None;
     }
 
-    let parent = parent?;
-    let pos = pos.clone();
+    let parent = *parent?;
+    let pos = *pos;
     let text = doc.text().byte_slice(node.byte_range());
 
     if let Some((_, header, desc)) = find_primitive([text]) {
@@ -38,7 +38,7 @@ pub fn hover(doc: &Document, pos: &Position, node: &Node, parent: Option<&Node>)
     if in_set_or_map || in_property {
         let mut ident = parent.child_by_field_name("type");
 
-        if let Some(ident_range) = ident.as_ref().map(|i| i.range()) {
+        if let Some(ident_range) = ident.as_ref().map(Node::range) {
             // Properties have a "type" field, which must be the one we're hovering
             if !ts_range_contains_lsp_position(ident_range, pos) {
                 ident = None;
@@ -48,11 +48,11 @@ pub fn hover(doc: &Document, pos: &Position, node: &Node, parent: Option<&Node>)
             // have a single identifier, and that is guaranteed to be the type
             let mut cursor = parent.walk();
             for child in parent.children(&mut cursor) {
-                if child.kind() == "identifier" {
-                    if ts_range_contains_lsp_position(child.range(), pos) {
-                        ident = Some(child);
-                        break;
-                    }
+                if child.kind() == "identifier"
+                    && ts_range_contains_lsp_position(child.range(), pos)
+                {
+                    ident = Some(child);
+                    break;
                 }
             }
         }

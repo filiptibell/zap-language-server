@@ -14,7 +14,7 @@ pub fn definition(
     _parent: Option<&Node>,
 ) -> Option<GotoDefinitionResponse> {
     let node_text = doc.text().slice(node.byte_range());
-    if node_text.as_str().is_none_or(|t| t.is_empty()) || !is_type_reference(node) {
+    if node_text.as_str().is_none_or(str::is_empty) || !is_type_reference(node) {
         return None;
     }
 

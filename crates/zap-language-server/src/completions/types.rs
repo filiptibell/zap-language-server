@@ -14,22 +14,22 @@ pub fn completion(
     node: &Node,
     parent: Option<&Node>,
 ) -> Vec<(CompletionItemKind, String)> {
-    let pos = pos.clone();
+    let pos = *pos;
 
-    let mut parent = parent.cloned();
-    let mut node = node.clone();
+    let mut parent = parent.copied();
+    let mut node = *node;
 
     // If our current node is the top-level "source file" we can
     // probably drill down to something a bit more specific & useful
     if node.kind() == "source_file" {
         let mut cursor = node.walk();
         for child in node.children(&mut cursor) {
-            if child.kind() == "type_declaration" {
-                if ts_range_contains_lsp_position(child.range(), pos) {
-                    parent = Some(node);
-                    node = child;
-                    break;
-                }
+            if child.kind() == "type_declaration"
+                && ts_range_contains_lsp_position(child.range(), pos)
+            {
+                parent = Some(node);
+                node = child;
+                break;
             }
         }
     }
@@ -55,7 +55,7 @@ pub fn completion(
     if in_type_decl || in_set_or_map || in_property {
         let mut ident = node.child_by_field_name("type");
 
-        if let Some(ident_range) = ident.as_ref().map(|i| i.range()) {
+        if let Some(ident_range) = ident.as_ref().map(Node::range) {
             // Properties have a "type" field, which must be the one we're completing,
             // otherwise we'd be completing identifiers when inside the property name
             if !ts_range_contains_lsp_position(ident_range, pos) {
@@ -66,11 +66,11 @@ pub fn completion(
             // have a single identifier, and that is guaranteed to be the type
             let mut cursor = node.walk();
             for child in node.children(&mut cursor) {
-                if child.kind() == "identifier" {
-                    if ts_range_contains_lsp_position(child.range(), pos) {
-                        ident = Some(child);
-                        break;
-                    }
+                if child.kind() == "identifier"
+                    && ts_range_contains_lsp_position(child.range(), pos)
+                {
+                    ident = Some(child);
+                    break;
                 }
             }
         }
@@ -79,7 +79,7 @@ pub fn completion(
             items.extend(
                 TYPE_KEYWORDS
                     .iter()
-                    .map(|word| (CompletionItemKind::KEYWORD, word.to_string())),
+                    .map(|word| (CompletionItemKind::KEYWORD, (*word).to_string())),
             );
 
             items.extend(
