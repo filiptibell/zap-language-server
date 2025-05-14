@@ -156,8 +156,6 @@ impl Document {
     */
     #[must_use]
     pub fn node_at_position(&self, position: Position) -> Option<Node> {
-        use crate::tree_sitter_utils::find_descendant_at_point;
-
         let tree = self.tree_sitter_tree.as_ref()?;
 
         let point = tree_sitter::Point {
@@ -165,7 +163,7 @@ impl Document {
             column: position.character as usize,
         };
 
-        find_descendant_at_point(tree.root_node(), point)
+        tree.root_node().descendant_for_point_range(point, point)
     }
 
     /**

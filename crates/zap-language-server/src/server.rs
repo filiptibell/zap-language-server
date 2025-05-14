@@ -69,11 +69,19 @@ impl Server for ZapLanguageServer {
             return Ok(None);
         };
         let Some(node) = doc.node_at_position(pos) else {
+            tracing::debug!("Missing node for hover at {}:{}", pos.line, pos.character);
             return Ok(None);
         };
 
         let parent = node.parent();
         let parent = parent.as_ref();
+
+        let text = doc.text().byte_slice(node.byte_range());
+        tracing::debug!(
+            "Hovering over node at {}:{} with contents '{text}'",
+            pos.line,
+            pos.character
+        );
 
         Ok(hover_for_keywords(&doc, &pos, &node, parent)
             .or_else(|| hover_for_types(&doc, &pos, &node, parent))
@@ -93,11 +101,23 @@ impl Server for ZapLanguageServer {
             return Ok(None);
         };
         let Some(node) = doc.node_at_position(pos) else {
+            tracing::debug!(
+                "Missing node for completion at {}:{}",
+                pos.line,
+                pos.character
+            );
             return Ok(None);
         };
 
         let parent = node.parent();
         let parent = parent.as_ref();
+
+        let text = doc.text().byte_slice(node.byte_range());
+        tracing::debug!(
+            "Completing for node at {}:{} with contents '{text}'",
+            pos.line,
+            pos.character
+        );
 
         let mut items = Vec::new();
         items.extend(completion_for_keywords(&doc, &pos, &node, parent));

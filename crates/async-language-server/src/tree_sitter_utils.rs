@@ -128,30 +128,3 @@ where
 
     None
 }
-
-/**
-    Finds the descendant node that directly contains the given point.
-
-    This uses **inclusive** bounds checks, meaning that points are
-    considered *inside* even if they lie on a line or column boundary
-*/
-pub fn find_descendant_at_point<'a>(node: Node<'a>, point: TsPoint) -> Option<Node<'a>> {
-    let mut cursor = node.walk();
-    let mut current = None;
-
-    if ts_range_contains_ts_point(node.range(), point.clone()) {
-        current = Some(node);
-    }
-
-    'outer: while let Some(node) = current.take() {
-        for child in node.children(&mut cursor) {
-            if ts_range_contains_ts_point(child.range(), point.clone()) {
-                current = Some(child);
-                continue 'outer;
-            }
-        }
-        return Some(node);
-    }
-
-    None
-}
