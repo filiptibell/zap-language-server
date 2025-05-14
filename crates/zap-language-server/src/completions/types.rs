@@ -2,7 +2,7 @@ use async_language_server::{
     lsp_types::{CompletionItemKind, Position},
     server::Document,
     tree_sitter::Node,
-    tree_sitter_utils::{find_child, ts_range_contains_lsp_position},
+    tree_sitter_utils::{find_child, find_descendant, ts_range_contains_lsp_position},
 };
 use zap_language::docs::get_primitive_names;
 
@@ -13,9 +13,7 @@ pub fn completion(doc: &Document, pos: Position, node: Node) -> Vec<(CompletionI
     // probably drill down to something a bit more specific & useful
     let node = if node.kind() == "source_file" {
         find_child(node, |c| {
-            let is_decl = c.kind() == "type_declaration";
-            let is_inside = ts_range_contains_lsp_position(c.range(), pos);
-            is_decl && is_inside
+            ts_range_contains_lsp_position(c.range(), pos) && c.kind() == "type_declaration"
         })
         .unwrap_or(node)
     } else {
@@ -23,7 +21,10 @@ pub fn completion(doc: &Document, pos: Position, node: Node) -> Vec<(CompletionI
     };
 
     // Try to find an even more specific node, if possible
-    let node = find_child(node, is_type).unwrap_or(node);
+    let node = find_descendant(node, |d| {
+        ts_range_contains_lsp_position(d.range(), pos) && is_type(d)
+    })
+    .unwrap_or(node);
 
     let mut items = Vec::new();
 
