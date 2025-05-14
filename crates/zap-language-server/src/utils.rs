@@ -91,6 +91,11 @@ pub fn is_type_reference(node: Node) -> bool {
     };
 
     match p.kind() {
+        // Optional types have an "inner" field
+        "optional_type" => p
+            .child_by_field_name("inner")
+            .is_some_and(is_ident_and_matches_this_node),
+
         // Properties and sets have an inner "type" field
         "property" | "set_type" => p
             .child_by_field_name("type")
