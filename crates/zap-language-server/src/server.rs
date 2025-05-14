@@ -11,7 +11,7 @@ use async_language_server::{
 use crate::{
     completions::{
         completion_for_instances, completion_for_keywords, completion_for_options,
-        completion_for_types, completion_trigger_characters,
+        completion_for_properties, completion_for_types, completion_trigger_characters,
     },
     definitions::definition_for_types,
     hovers::{hover_for_keywords, hover_for_options, hover_for_properties, hover_for_types},
@@ -111,6 +111,7 @@ impl Server for ZapLanguageServer {
         items.extend(completion_for_keywords(&doc, pos, node));
         items.extend(completion_for_types(&doc, pos, node));
         items.extend(completion_for_instances(&doc, pos, node));
+        items.extend(completion_for_properties(&doc, pos, node));
         items.extend(completion_for_options(&doc, pos, node).await);
 
         if items.is_empty() {
