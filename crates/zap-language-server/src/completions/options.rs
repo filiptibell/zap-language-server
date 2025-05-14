@@ -1,13 +1,10 @@
-use std::{
-    env::current_dir,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use async_language_server::{
-    lsp_types::{CompletionItemKind, Position},
+    lsp_types::{CompletionItemKind, Position, Url},
     server::Document,
     tree_sitter::Node,
-    tree_sitter_utils::{find_child, ts_range_contains_lsp_position},
+    tree_sitter_utils::{find_child, find_nearest, ts_range_contains_lsp_position},
 };
 
 use zap_language::docs::{find_option, find_variants, get_option_names};
@@ -17,104 +14,66 @@ pub async fn completion(
     pos: Position,
     node: Node<'_>,
 ) -> Vec<(CompletionItemKind, String)> {
-    // If our current node is the top-level "source file" we can
-    // probably drill down to something a bit more specific & useful
-    let mut node = if node.kind() == "source_file" {
-        find_child(node, |c| {
-            let is_decl = c.kind() == "option_declaration";
-            let is_inside = ts_range_contains_lsp_position(c.range(), pos);
-            is_decl && is_inside
-        })
-        .unwrap_or(node)
-    } else {
-        node
+    let Some(node) = find_nearest(node, pos, |n| n.kind() == "option_declaration") else {
+        return Vec::new();
     };
 
-    // If we are inside *a child* of an option declaration, traverse one up
-    let mut parent = node.parent();
-    if parent.is_some_and(|p| p.kind() == "option_declaration") {
-        node = parent.unwrap();
-        parent = doc.node_at_root();
-    }
-
-    // If we are inside an option declaration, find the identifier node,
-    // as well as the node we are currently inside (ident or value child)
-    let mut ident = None;
-    if node.kind() == "option_declaration" {
-        let mut cursor = node.walk();
-        for child in node.children(&mut cursor) {
-            if child.kind() == "identifier" {
-                // First identifier is option name, second
-                // might be an incomplete option value
-                if ident.is_none() {
-                    ident = Some(child);
-                }
-            } else if !matches!(child.kind(), "string" | "boolean") {
-                continue; // Ignore spacing, equals, etc
-            }
-            if ts_range_contains_lsp_position(child.range(), pos) {
-                parent = Some(node);
-                node = child;
-            }
-        }
-    }
-
-    // We might have a parent by now, and if we do, it must
-    // also be an option declaration to provide completions
-    if parent.is_none_or(|p| p.kind() != "option_declaration") {
+    // The option declaration should have the option identifier,
+    // and the value, which can not be the same node as identifier
+    let opt_ident = find_child(node, is_opt_ident);
+    let Some(opt_ident) = opt_ident else {
         return Vec::new();
-    }
+    };
+
+    let opt_name = doc.text().byte_slice(opt_ident.byte_range()).to_string();
+    let opt_value = find_child(node, |c| c != opt_ident && is_opt_value(c));
 
     let mut items = Vec::new();
 
-    let ident = ident.expect("valid options have idents");
-    if node == ident {
+    if ts_range_contains_lsp_position(opt_ident.range(), pos) {
         // We are currently inside the identifier, complete option names
-        let ident = doc.text().byte_slice(node.byte_range());
-        if let Some(ident) = ident.as_str() {
-            items.extend(
-                get_option_names()
-                    .filter(|opt| opt.contains(ident))
-                    .map(|opt| (CompletionItemKind::PROPERTY, opt.to_string())),
-            );
-        }
-    } else {
+        items.extend(get_option_names().map(|opt| (CompletionItemKind::PROPERTY, opt.to_string())));
+    } else if opt_value.is_some_and(|v| ts_range_contains_lsp_position(v.range(), pos)) {
         // We are currently inside the value, try to complete variants
-        let ident = doc.text().byte_slice(ident.byte_range());
-        if let Some(ident) = ident.as_str() {
-            if let Some((_, typ, _)) = find_option([ident]) {
-                if typ == "boolean" {
-                    // Plain booleans
+        let Some(opt_value) = opt_value else {
+            return Vec::new();
+        };
+        if let Some((_, typ, _)) = find_option([opt_name.trim()]) {
+            if typ == "boolean" {
+                // Plain booleans - will be categorized as "identifier" when incomplete
+                if matches!(opt_value.kind(), "boolean" | "identifier") {
                     items.push((CompletionItemKind::CONSTANT, String::from("true")));
                     items.push((CompletionItemKind::CONSTANT, String::from("false")));
-                } else if node.kind() == "string" {
-                    if typ == "variant" {
-                        // Option variants - must also be enclosed in strings
-                        if let Some((true, variants)) = find_variants([ident]) {
-                            if node.kind() == "string" {
-                                items.extend(variants.iter().map(|variant| {
-                                    (CompletionItemKind::ENUM_MEMBER, (*variant).to_string())
-                                }));
-                            }
-                        }
-                    } else if typ == "path" {
-                        // File paths - don't have to exist, but completions
-                        // for existing directories is probably nice to have
-                        let path = doc.text().byte_slice(node.byte_range());
-                        let path = PathBuf::from(
-                            path.to_string()
-                                .trim_start_matches('"')
-                                .trim_end_matches('"'),
-                        );
-                        items.extend(
-                            gather_cwd_completion_directories(&path)
-                                .await
-                                .into_iter()
-                                .flatten()
-                                .map(|variant| (CompletionItemKind::FOLDER, variant.to_string())),
-                        );
+                }
+            } else if typ == "variant" {
+                // Option variants - must also be enclosed in strings
+                if opt_value.kind() == "string" {
+                    if let Some((true, variants)) = find_variants([&opt_name]) {
+                        items.extend(variants.iter().map(|variant| {
+                            (CompletionItemKind::ENUM_MEMBER, (*variant).to_string())
+                        }));
                     }
                 }
+            } else if typ == "path" {
+                // File paths - don't have to exist, but completions
+                // for existing directories is probably nice to have
+                if opt_value.kind() == "string" {
+                    let path = doc.text().byte_slice(opt_value.byte_range());
+                    let path = PathBuf::from(
+                        path.to_string()
+                            .trim_start_matches('"')
+                            .trim_end_matches('"'),
+                    );
+                    items.extend(
+                        gather_cwd_completion_directories(doc.url(), &path)
+                            .await
+                            .into_iter()
+                            .flatten()
+                            .map(|variant| (CompletionItemKind::FOLDER, variant.to_string())),
+                    );
+                }
+            } else if typ == "number" {
+                // Numbers - completions are not relevant here
             }
         }
     }
@@ -122,9 +81,17 @@ pub async fn completion(
     items
 }
 
-async fn gather_cwd_completion_directories(path: &Path) -> Option<Vec<String>> {
-    let cwd = current_dir().ok()?;
-    let path = cwd.join(path);
+fn is_opt_ident(node: Node) -> bool {
+    matches!(node.kind(), "identifier")
+}
+fn is_opt_value(node: Node) -> bool {
+    matches!(node.kind(), "string" | "number" | "boolean" | "identifier")
+}
+
+async fn gather_cwd_completion_directories(uri: &Url, path: &Path) -> Option<Vec<String>> {
+    let file = uri.to_file_path().ok()?;
+    let dir = file.parent()?;
+    let path = dir.join(path);
 
     let mut items = Vec::new();
     let mut reader = tokio::fs::read_dir(path).await.ok()?;

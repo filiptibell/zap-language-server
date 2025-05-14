@@ -124,3 +124,44 @@ where
 
     None
 }
+
+/**
+    Finds the nearest node at `pos` that also matches the given predicate
+
+    1. If the given node itself matches the predicate, returns the node
+    2. If the given node has a child that matches the predicate, returns the child
+    3. If the given node has a descendant that matches the predicate, returns the descendant
+    4. If the given node has an ancestor that matches the predicate, returns the ancestor
+
+    Note that this uses **inclusive** bounds checks, meaning that points
+    are considered *inside* even if they lie on a line or column boundary
+*/
+pub fn find_nearest<'a, F>(node: Node<'a>, pos: LspPosition, predicate: F) -> Option<Node<'a>>
+where
+    F: Fn(Node<'a>) -> bool,
+{
+    // Make sure that we are actually inside this node, first of all ...
+    if ts_range_contains_lsp_position(node.range(), pos) {
+        // We are inside the node, check it
+        if predicate(node) {
+            return Some(node);
+        }
+        // Node is not of kind, check children + descendants + ancestors
+        // This may do some redundant work for descendants, but unfortunately
+        // there is no easy way to find node depth and skip the direct children
+        find_child(node, |child| {
+            ts_range_contains_lsp_position(child.range(), pos) && predicate(child)
+        })
+        .or_else(|| {
+            find_descendant(node, |descendant| {
+                ts_range_contains_lsp_position(descendant.range(), pos) && predicate(descendant)
+            })
+        })
+        .or_else(|| find_ancestor(node, &predicate))
+    } else {
+        // We are not inside the node, but an ancestor may still match the position
+        find_ancestor(node, |ancestor| {
+            ts_range_contains_lsp_position(ancestor.range(), pos) && predicate(ancestor)
+        })
+    }
+}

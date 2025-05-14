@@ -73,12 +73,7 @@ impl Server for ZapLanguageServer {
             return Ok(None);
         };
 
-        let text = doc.text().byte_slice(node.byte_range());
-        tracing::debug!(
-            "Getting hover for node at {}:{} with contents '{text}'",
-            pos.line,
-            pos.character
-        );
+        tracing::debug!("Getting hover for node at {}:{}", pos.line, pos.character);
 
         Ok(hover_for_keywords(&doc, pos, node)
             .or_else(|| hover_for_types(&doc, pos, node))
@@ -106,9 +101,8 @@ impl Server for ZapLanguageServer {
             return Ok(None);
         };
 
-        let text = doc.text().byte_slice(node.byte_range());
         tracing::debug!(
-            "Getting completions for node at {}:{} with contents '{text}'",
+            "Getting completions for node at {}:{}",
             pos.line,
             pos.character
         );
@@ -155,9 +149,12 @@ impl Server for ZapLanguageServer {
             return Ok(None);
         };
 
-        let text = doc.text().byte_slice(node.byte_range());
+        if doc.node_at_root().is_some_and(|r| node == r) {
+            return Ok(None); // Cant go to definition on the root node
+        }
+
         tracing::debug!(
-            "Getting definition for node at {}:{} with contents '{text}'",
+            "Getting definition for node at {}:{}",
             pos.line,
             pos.character
         );

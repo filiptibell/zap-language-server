@@ -2,9 +2,7 @@
 
 use std::collections::HashMap;
 
-use async_language_server::{
-    server::Document, tree_sitter::Node, tree_sitter_utils::find_child,
-};
+use async_language_server::{server::Document, tree_sitter::Node, tree_sitter_utils::find_child};
 
 /**
     Gathers all of the declared types in the given document, and returns
