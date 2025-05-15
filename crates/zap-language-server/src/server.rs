@@ -2,10 +2,9 @@ use async_language_server::{
     lsp_types::{
         ClientCapabilities, CompletionItem, CompletionOptions, CompletionParams,
         CompletionResponse, GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverParams,
-        HoverProviderCapability, OneOf, ServerCapabilities, ServerInfo, Url,
+        HoverProviderCapability, OneOf, ServerCapabilities, ServerInfo,
     },
-    server::{Server, ServerResult, ServerState},
-    tree_sitter::Language,
+    server::{DocumentMatcher, Server, ServerResult, ServerState},
 };
 
 use crate::{
@@ -53,12 +52,13 @@ impl Server for ZapLanguageServer {
         })
     }
 
-    fn determine_tree_sitter_language(_: &Url, language: &str) -> Option<Language> {
-        if language.trim().eq_ignore_ascii_case("zap") {
-            Some(tree_sitter_zap::LANGUAGE.into())
-        } else {
-            None
-        }
+    fn server_document_matchers() -> Vec<DocumentMatcher> {
+        vec![
+            DocumentMatcher::new("Zap Document")
+                .with_url_globs(["*.zap"])
+                .with_lang_strings(["Zap"])
+                .with_lang_grammar(tree_sitter_zap::LANGUAGE.into()),
+        ]
     }
 
     async fn hover(&self, state: ServerState, params: HoverParams) -> ServerResult<Option<Hover>> {

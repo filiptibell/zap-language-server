@@ -85,11 +85,12 @@ checksum = "e16d2d3311acee920a9eb8d33b8cbc1787ce4a264e85f964c2404b969bdcd487"
 [[package]]
 name = "async-language-server"
 version = "0.0.0"
-source = "git+https://github.com/filiptibell/async-language-server?rev=097eca136440ed9bd5d5de2d92b8a92dd2f23038#097eca136440ed9bd5d5de2d92b8a92dd2f23038"
+source = "git+https://github.com/filiptibell/async-language-server?rev=60d951b4c14faa8e03d19bc2fb77b5a7fbc8b435#60d951b4c14faa8e03d19bc2fb77b5a7fbc8b435"
 dependencies = [
  "async-lsp",
  "dashmap",
  "futures",
+ "globset",
  "ropey",
  "thiserror",
  "tokio",
@@ -149,6 +150,16 @@ name = "bitflags"
 version = "2.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5c8214115b7bf84099f1309324e63141d4c5d7cc26862f97a0a857dbefe165bd"
+
+[[package]]
+name = "bstr"
+version = "1.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "234113d19d0d7d613b40e86fb654acf958910802bcceab913a4f9e7cda03b1a4"
+dependencies = [
+ "memchr",
+ "serde",
+]
 
 [[package]]
 name = "bytes"
@@ -367,6 +378,19 @@ name = "gimli"
 version = "0.31.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "07e28edb80900c19c28f1072f2e8aeca7fa06b23cd4169cefe1af5aa3260783f"
+
+[[package]]
+name = "globset"
+version = "0.4.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54a1028dfc5f5df5da8a56a73e6c153c9a9708ec57232470703592a3f18e49f5"
+dependencies = [
+ "aho-corasick",
+ "bstr",
+ "log",
+ "regex-automata 0.4.9",
+ "regex-syntax 0.8.5",
+]
 
 [[package]]
 name = "hashbrown"
