@@ -14,16 +14,20 @@ workspace = true
 [dependencies]
 anyhow = "1.0"
 clap = { version = "4.5", features = ["derive", "env"] }
+console = "0.15"
+fs-err = { version = "3.1", features = ["tokio"] }
+similar = { version = "2.7", features = ["text", "inline", "bytes"] }
 
 tokio = { version = "1.45", features = ["rt", "fs", "macros"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 zap-language = { path = "../zap-language" }
+zap-formatter = { path = "../zap-formatter" }
 
 [dependencies.async-language-server]
 git = "https://github.com/filiptibell/async-language-server"
-rev = "60d951b4c14faa8e03d19bc2fb77b5a7fbc8b435"
+rev = "a1cdf8f8541bf407f92a761a0b6db0b080673dbc"
 features = ["tracing", "tree-sitter"]
 
 [dependencies.tree-sitter-zap]

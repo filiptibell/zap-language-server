@@ -1,11 +1,14 @@
 use async_language_server::{
     lsp_types::{
         ClientCapabilities, CompletionItem, CompletionOptions, CompletionParams,
-        CompletionResponse, GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverParams,
-        HoverProviderCapability, OneOf, ServerCapabilities, ServerInfo,
+        CompletionResponse, DocumentFormattingParams, GotoDefinitionParams, GotoDefinitionResponse,
+        Hover, HoverParams, HoverProviderCapability, OneOf, ServerCapabilities, ServerInfo,
+        TextEdit,
     },
-    server::{DocumentMatcher, Server, ServerResult, ServerState},
+    server::{DocumentMatcher, Server, ServerError, ServerResult, ServerState},
+    tree_sitter_utils::ts_range_to_lsp_range,
 };
+use zap_formatter::Config;
 
 use crate::{
     completions::{
@@ -48,6 +51,7 @@ impl Server for ZapLanguageServer {
                 trigger_characters: Some(completion_trigger_characters()),
                 ..Default::default()
             }),
+            document_formatting_provider: Some(OneOf::Left(true)),
             ..Default::default()
         })
     }
@@ -161,5 +165,31 @@ impl Server for ZapLanguageServer {
         );
 
         Ok(definition_for_types(&doc, pos, node))
+    }
+
+    async fn document_format(
+        &self,
+        state: ServerState,
+        params: DocumentFormattingParams,
+    ) -> ServerResult<Option<Vec<TextEdit>>> {
+        let url = params.text_document.uri;
+
+        let Some(doc) = state.document(&url) else {
+            return Ok(None);
+        };
+        let Some(root) = doc.node_at_root() else {
+            return Ok(None);
+        };
+
+        let text = doc.text_bytes();
+        let config = Config::new(text.as_slice());
+
+        let mut new_text = String::new();
+        if let Err(e) = zap_formatter::format_document(&mut new_text, config, root) {
+            return Err(ServerError::unknown(e));
+        }
+
+        let range = ts_range_to_lsp_range(root.range());
+        Ok(Some(vec![TextEdit { range, new_text }]))
     }
 }

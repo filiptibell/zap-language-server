@@ -1,7 +1,11 @@
 [workspace]
 resolver = "2"
 default-members = ["crates/zap-language-server"]
-members = ["crates/zap-language", "crates/zap-language-server"]
+members = [
+	"crates/zap-language",
+	"crates/zap-formatter",
+	"crates/zap-language-server",
+]
 
 [profile.release]
 opt-level = "z"

@@ -1,12 +1,15 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
+mod fmt;
 mod serve;
 
+use self::fmt::FormatCommand;
 use self::serve::ServeCommand;
 
 #[derive(Debug, Clone, Subcommand)]
 pub enum CliSubcommand {
+    Fmt(FormatCommand),
     Serve(ServeCommand),
 }
 
@@ -24,6 +27,7 @@ impl Cli {
 
     pub async fn run(self) -> Result<()> {
         match self.subcommand {
+            CliSubcommand::Fmt(cmd) => cmd.run().await,
             CliSubcommand::Serve(cmd) => cmd.run().await,
         }
     }
