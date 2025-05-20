@@ -2,7 +2,6 @@
 [
   (struct_type)
   (enum_type)
-  (enum_tagged_variant)
   (event_declaration)
   (function_declaration)
 ] @fold

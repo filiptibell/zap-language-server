@@ -74,8 +74,8 @@
 (function_declaration
   name: (identifier) @function)
 
-(enum_tagged_variant
-  name: (identifier) @enum.variant)
+(enum_variant
+  (identifier) @enum.variant)
 
 ; Fields and Properties
 (property

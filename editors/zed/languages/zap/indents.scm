@@ -2,9 +2,8 @@
 (struct_type "{" "}" @end) @indent
 
 ; Enum indentation
-(enum_unit_type "{" "}" @end) @indent
-(enum_tagged_type "{" "}" @end) @indent
-(enum_tagged_variant "{" "}" @end) @indent
+(enum_type "{" "}" @end) @indent
+(enum_variant "{" "}" @end) @indent
 
 ; Event/Function indentation
 (event_declaration "{" "}" @end) @indent
