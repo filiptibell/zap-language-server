@@ -16,6 +16,7 @@ An experimental language server is also available, adding support for:
 - Information on hover for keywords, primitive types, and user-defined types
 - Completion for keywords, primitive types, and user-defined types
 - Go to definition for user-defined types
+- Full document auto-formatting
 
 Currently, the language server only runs in the Zed editor, and can be installed as such:
 
