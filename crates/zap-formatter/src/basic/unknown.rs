@@ -11,14 +11,16 @@ pub(crate) fn format_unknown(
     node: Node,
 ) -> Result {
     let mut had_first = false;
+    let mut last_punc = false;
     for node in DepthFirstNodeIterator::new(node).filter(|n| n.child_count() == 0) {
         let text = state.text(node);
         if had_first {
-            // Only write sep spacing if not punctuation,
-            // or if it is an opening / closing brace
-            if !is_punctuation_str(text) || matches!(text, "{" | "}") {
+            // Only write sep spacing if not near punctuation
+            let is_punc = is_punctuation_str(text);
+            if !is_punc && !last_punc {
                 write!(writer, " ")?;
             }
+            last_punc = is_punc;
         } else {
             had_first = true;
         }
