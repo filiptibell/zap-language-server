@@ -72,9 +72,7 @@ fn format_node(writer: &mut impl fmt::Write, state: &mut State, node: Node) -> R
         "type_declaration" | "event_declaration" | "function_declaration" => {
             format_declaration(writer, state, node)
         }
-        "optional_type" | "struct_type" | "enum_type" | "enum_unit_type" | "enum_tagged_type" => {
-            format_type(writer, state, node)
-        }
+        "optional_type" | "struct_type" | "enum_type" => format_type(writer, state, node),
         _ => format_unknown(writer, state, node),
     }
 }

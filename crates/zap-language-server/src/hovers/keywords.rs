@@ -21,8 +21,7 @@ pub fn hover(doc: &Document, pos: Position, node: Node) -> Option<Hover> {
             | "map_type"
             | "set_type"
             | "struct_type"
-            | "enum_unit_type"
-            | "enum_tagged_type"
+            | "enum_type"
     ) {
         node = node.child(0)?;
         if !ts_range_contains_lsp_position(node.range(), pos) {
