@@ -2,7 +2,9 @@ use std::fmt;
 
 use tree_sitter::Node;
 
-use crate::{format_node, result::Result, state::State, utils::is_type_empty};
+use crate::{
+    format_node, is_comment_node, is_known_node, result::Result, state::State, utils::is_type_empty,
+};
 
 pub(crate) fn format_enum(writer: &mut impl fmt::Write, state: &mut State, node: Node) -> Result {
     let tag = node.child_by_field_name("tag").map(|t| state.text(t));
@@ -22,7 +24,18 @@ pub(crate) fn format_enum(writer: &mut impl fmt::Write, state: &mut State, node:
         let mut cursor = node.walk();
         for child in node.children(&mut cursor) {
             if child.kind() == "enum_variant" {
+                write!(writer, "{}", state.indent())?;
                 format_tagged_variant(writer, state, child)?;
+                writeln!(writer, ",")?;
+            } else if is_known_node(child) {
+                write!(writer, "{}", state.indent())?;
+                format_node(writer, state, child)?;
+
+                if is_comment_node(child) {
+                    writeln!(writer)?;
+                } else {
+                    writeln!(writer, ",")?;
+                }
             }
         }
 
@@ -30,31 +43,37 @@ pub(crate) fn format_enum(writer: &mut impl fmt::Write, state: &mut State, node:
 
         write!(writer, "{}}}", state.indent())?;
     } else {
-        // Untagged enum, format as one of: singe line, grid (3x3, 4x4, etc), multiline
+        // Untagged enum, format as one of: single line, grid (3x3, 4x4, etc), generic multiline
         let mut cursor = node.walk();
         let mut identifiers = Vec::new();
+        let mut all_children_are_variants = true;
         for child in node.children(&mut cursor) {
             if child.kind() == "enum_variant" {
                 let ident = child.child(0).expect("valid enum variant");
                 identifiers.push(state.text(ident).to_string());
+            } else if is_known_node(child) {
+                all_children_are_variants = false;
+                break;
             }
         }
 
         let mut format_as_line = false;
         let mut format_as_grid = false;
 
-        if identifiers.len() <= 4 {
-            let total_chars = 2 // Braces
-        + identifiers.len() // Commas
-        + identifiers.len().saturating_sub(1) // Spacing
-        + identifiers.iter().map(String::len).sum::<usize>();
-            if total_chars <= state.config.columns {
-                format_as_line = true;
-            }
-        } else if matches!(identifiers.len(), 9 | 16 | 25 | 36) {
-            if let Some(first_len) = identifiers.first().map(String::len) {
-                if identifiers.iter().all(|i| i.len() == first_len) {
-                    format_as_grid = true;
+        if all_children_are_variants {
+            if identifiers.len() <= 4 {
+                let total_chars = 2 // Braces
+			        + identifiers.len() // Commas
+			        + identifiers.len().saturating_sub(1) // Spacing
+			        + identifiers.iter().map(String::len).sum::<usize>();
+                if total_chars <= state.config.columns {
+                    format_as_line = true;
+                }
+            } else if matches!(identifiers.len(), 9 | 16 | 25 | 36) {
+                if let Some(first_len) = identifiers.first().map(String::len) {
+                    if identifiers.iter().all(|i| i.len() == first_len) {
+                        format_as_grid = true;
+                    }
                 }
             }
         }
@@ -64,7 +83,7 @@ pub(crate) fn format_enum(writer: &mut impl fmt::Write, state: &mut State, node:
         } else if format_as_grid {
             format_untagged_grid(writer, state, &identifiers)?;
         } else {
-            format_untagged_multiline(writer, state, &identifiers)?;
+            format_untagged_multiline(writer, state, node)?;
         }
     }
 
@@ -75,9 +94,9 @@ fn format_tagged_variant(writer: &mut impl fmt::Write, state: &mut State, node: 
     let variant = node.child(0).expect("valid enum variant");
 
     if is_type_empty(node) {
-        write!(writer, "{}{} {{}}", state.indent(), state.text(variant))?;
+        write!(writer, "{} {{}}", state.text(variant))?;
     } else {
-        writeln!(writer, "{}{} {{", state.indent(), state.text(variant))?;
+        writeln!(writer, "{} {{", state.text(variant))?;
 
         state.increase_depth();
 
@@ -85,18 +104,26 @@ fn format_tagged_variant(writer: &mut impl fmt::Write, state: &mut State, node: 
         for child in node.children(&mut cursor) {
             if child.kind() == "property" {
                 let key = child.child(0).expect("valid enum variant field");
-                write!(writer, "{}{}: ", state.indent(), state.text(key))?;
-
                 let typ = child.child(2).expect("valid enum variant field");
-                format_node(writer, state, typ)?;
 
+                write!(writer, "{}{}: ", state.indent(), state.text(key))?;
+                format_node(writer, state, typ)?;
                 writeln!(writer, ",")?;
+            } else if is_known_node(child) {
+                write!(writer, "{}", state.indent())?;
+                format_node(writer, state, child)?;
+
+                if is_comment_node(child) {
+                    writeln!(writer)?;
+                } else {
+                    writeln!(writer, ",")?;
+                }
             }
         }
 
         state.decrease_depth();
 
-        writeln!(writer, "{}}},", state.indent())?;
+        write!(writer, "{}}}", state.indent())?;
     }
 
     Ok(())
@@ -193,6 +220,7 @@ fn format_untagged_grid(
         One,
         Two,
         Three,
+        -- Maybe a comment
         Four,
         Five,
         Six,
@@ -202,14 +230,27 @@ fn format_untagged_grid(
 fn format_untagged_multiline(
     writer: &mut impl fmt::Write,
     state: &mut State,
-    identifiers: &[String],
+    node: Node,
 ) -> Result {
     writeln!(writer, "enum {{")?;
 
     state.increase_depth();
 
-    for identifier in identifiers {
-        writeln!(writer, "{}{identifier},", state.indent())?;
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        if child.kind() == "enum_variant" {
+            let ident = child.child(0).expect("valid enum variant");
+            writeln!(writer, "{}{},", state.indent(), state.text(ident))?;
+        } else if is_known_node(child) {
+            write!(writer, "{}", state.indent())?;
+            format_node(writer, state, child)?;
+
+            if is_comment_node(child) {
+                writeln!(writer)?;
+            } else {
+                writeln!(writer, ",")?;
+            }
+        }
     }
 
     state.decrease_depth();

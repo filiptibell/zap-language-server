@@ -2,7 +2,7 @@ use std::fmt;
 
 use tree_sitter::Node;
 
-use crate::{format_node, result::Result, state::State, types::format_type};
+use crate::{format_node, is_known_node, result::Result, state::State, types::format_type};
 
 pub(crate) fn format_declaration(
     writer: &mut impl fmt::Write,
@@ -29,7 +29,14 @@ pub(crate) fn format_declaration(
                 | "event_data_field"
                 | "function_call_field"
                 | "function_args_field"
-                | "function_rets_field" => format_declaration_field(writer, state, child)?,
+                | "function_rets_field" => {
+                    write!(writer, "{}", state.indent())?;
+                    format_declaration_field(writer, state, child)?;
+                }
+                _ if is_known_node(child) => {
+                    write!(writer, "{}", state.indent())?;
+                    format_node(writer, state, child)?;
+                }
                 _ => {}
             }
         }
@@ -62,7 +69,7 @@ fn format_declaration_field(writer: &mut impl fmt::Write, state: &mut State, nod
         .trim_start_matches("event_")
         .trim_start_matches("function_")
         .trim_end_matches("_field");
-    write!(writer, "{}{key}: ", state.indent())?;
+    write!(writer, "{key}: ")?;
 
     let value = node.child(2).expect("valid event or function field");
     format_node(writer, state, value)?;

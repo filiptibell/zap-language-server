@@ -15,17 +15,6 @@ pub(crate) fn format_comment(
     Ok(())
 }
 
-pub(crate) fn format_inline_comment(
-    writer: &mut impl fmt::Write,
-    state: &mut State,
-    node: Node,
-) -> Result {
-    let text = state.text(node);
-    let text = format_comment_contents(text);
-    write!(writer, " {text}")?; // Space before comment
-    Ok(())
-}
-
 fn format_comment_contents(comment: &str) -> String {
     if comment.starts_with("--") && comment.len() > 2 {
         // Normal comment, might be missing leading whitespace

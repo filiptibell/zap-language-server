@@ -2,7 +2,9 @@ use std::fmt;
 
 use tree_sitter::Node;
 
-use crate::{format_node, result::Result, state::State, utils::is_type_empty};
+use crate::{
+    format_node, is_comment_node, is_known_node, result::Result, state::State, utils::is_type_empty,
+};
 
 pub(crate) fn format_struct(writer: &mut impl fmt::Write, state: &mut State, node: Node) -> Result {
     if is_type_empty(node) {
@@ -15,7 +17,21 @@ pub(crate) fn format_struct(writer: &mut impl fmt::Write, state: &mut State, nod
         let mut cursor = node.walk();
         for child in node.children(&mut cursor) {
             if child.kind() == "property" {
-                format_struct_field(writer, state, child)?;
+                let key = child.child(0).expect("valid struct field");
+                let typ = child.child(2).expect("valid struct field");
+
+                write!(writer, "{}{}: ", state.indent(), state.text(key))?;
+                format_node(writer, state, typ)?;
+                writeln!(writer, ",")?;
+            } else if is_known_node(child) {
+                write!(writer, "{}", state.indent())?;
+                format_node(writer, state, child)?;
+
+                if is_comment_node(child) {
+                    writeln!(writer)?;
+                } else {
+                    writeln!(writer, ",")?;
+                }
             }
         }
 
@@ -23,18 +39,6 @@ pub(crate) fn format_struct(writer: &mut impl fmt::Write, state: &mut State, nod
 
         write!(writer, "{}}}", state.indent())?;
     }
-
-    Ok(())
-}
-
-fn format_struct_field(writer: &mut impl fmt::Write, state: &mut State, node: Node) -> Result {
-    let key = node.child(0).expect("valid struct field");
-    write!(writer, "{}{}: ", state.indent(), state.text(key))?;
-
-    let typ = node.child(2).expect("valid struct field");
-    format_node(writer, state, typ)?;
-
-    writeln!(writer, ",")?;
 
     Ok(())
 }

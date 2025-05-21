@@ -10,9 +10,7 @@ mod types;
 mod utils;
 
 use self::basic::{
-    comments::{format_comment, format_inline_comment},
-    declarations::format_declaration,
-    options::format_option_declaration,
+    comments::format_comment, declarations::format_declaration, options::format_option_declaration,
     unknown::format_unknown,
 };
 use self::state::State;
@@ -67,7 +65,7 @@ pub fn format_document(writer: &mut impl fmt::Write, config: Config, root: Node)
 
 fn format_node(writer: &mut impl fmt::Write, state: &mut State, node: Node) -> Result {
     match node.kind() {
-        "comment" => format_inline_comment(writer, state, node),
+        _ if is_comment_node(node) => format_comment(writer, state, node),
         "option_declaration" => format_option_declaration(writer, state, node),
         "type_declaration" | "event_declaration" | "function_declaration" => {
             format_declaration(writer, state, node)
@@ -75,4 +73,23 @@ fn format_node(writer: &mut impl fmt::Write, state: &mut State, node: Node) -> R
         "optional_type" | "struct_type" | "enum_type" => format_type(writer, state, node),
         _ => format_unknown(writer, state, node),
     }
+}
+
+fn is_known_node(node: Node) -> bool {
+    matches!(
+        node.kind(),
+        "comment"
+            | "doc_comment"
+            | "option_declaration"
+            | "type_declaration"
+            | "event_declaration"
+            | "function_declaration"
+            | "optional_type"
+            | "struct_type"
+            | "enum_type"
+    )
+}
+
+fn is_comment_node(node: Node) -> bool {
+    matches!(node.kind(), "comment" | "doc_comment")
 }
