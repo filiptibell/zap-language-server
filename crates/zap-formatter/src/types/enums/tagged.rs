@@ -6,6 +6,19 @@ use crate::{
     format_node, is_comment_node, is_known_node, result::Result, state::State, utils::is_type_empty,
 };
 
+/**
+    Formats a tagged enum using compact formatting.
+
+    Example:
+
+    ```zap
+    type CompactTagged = enum "Kind" {
+        AA { Value: u8 },
+        BB { Value: u16 },
+        CC { Value: u32 },
+    }
+    ```
+*/
 pub(super) fn format_tagged_compact(
     writer: &mut impl fmt::Write,
     state: &mut State,
@@ -69,6 +82,25 @@ fn format_variant_compact(
     Ok(())
 }
 
+/**
+    Formats a tagged enum using regular multiline formatting.
+
+    Example:
+
+    ```zap
+    type Tagged = enum "Kind" {
+        VariantOne {
+            Foo: u8,
+        },
+        VariantTwo {
+            Bar: u16,
+        },
+        VariantThree {
+            Baz: u32,
+        },
+    }
+    ```
+*/
 pub(super) fn format_tagged_multiline(
     writer: &mut impl fmt::Write,
     state: &mut State,
