@@ -30,7 +30,7 @@ pub(crate) fn format_enum(writer: &mut impl fmt::Write, state: &mut State, node:
         let mut variant_field_names = HashSet::new();
 
         let mut cursor = node.walk();
-        'outer: for child in node.children(&mut cursor) {
+        'outer: for child in node.children(&mut cursor).skip(2) {
             if child.kind() == "enum_variant" {
                 let ident = child.child(0).expect("valid enum variant");
                 let ident = state.text(ident);
@@ -39,7 +39,7 @@ pub(crate) fn format_enum(writer: &mut impl fmt::Write, state: &mut State, node:
                 variant_len_max = variant_len_max.max(ident.len());
 
                 let mut child_cursor = child.walk();
-                for descendant in child.children(&mut child_cursor) {
+                for descendant in child.children(&mut child_cursor).skip(2) {
                     if descendant.kind() == "property" {
                         let key = descendant.child(0).expect("valid enum variant field");
                         variant_field_names.insert(state.text(key));
@@ -71,7 +71,7 @@ pub(crate) fn format_enum(writer: &mut impl fmt::Write, state: &mut State, node:
         let mut cursor = node.walk();
         let mut identifiers = Vec::new();
         let mut all_children_are_variants = true;
-        for child in node.children(&mut cursor) {
+        for child in node.children(&mut cursor).skip(1) {
             if child.kind() == "enum_variant" {
                 let ident = child.child(0).expect("valid enum variant");
                 identifiers.push(state.text(ident).to_string());

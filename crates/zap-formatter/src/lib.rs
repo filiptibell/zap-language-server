@@ -10,8 +10,7 @@ mod types;
 mod utils;
 
 use self::basic::{
-    comments::format_comment, declarations::format_declaration, options::format_option_declaration,
-    unknown::format_unknown,
+    comments::format_comment, declarations::format_declaration, plain::format_plain,
 };
 use self::state::State;
 use self::types::format_type;
@@ -64,32 +63,60 @@ pub fn format_document(writer: &mut impl fmt::Write, config: Config, root: Node)
 }
 
 fn format_node(writer: &mut impl fmt::Write, state: &mut State, node: Node) -> Result {
-    match node.kind() {
-        _ if is_comment_node(node) => format_comment(writer, state, node),
-        "option_declaration" => format_option_declaration(writer, state, node),
-        "type_declaration" | "event_declaration" | "function_declaration" => {
-            format_declaration(writer, state, node)
-        }
-        "optional_type" | "struct_type" | "enum_type" => format_type(writer, state, node),
-        _ => format_unknown(writer, state, node),
+    if is_comment_node(node) {
+        format_comment(writer, state, node)?;
+    } else if is_declaration_node(node) {
+        format_declaration(writer, state, node)?;
+    } else if is_type_node(node) || is_range_node(node) || is_array_node(node) {
+        format_type(writer, state, node)?;
+    } else if is_ident_node(node) {
+        format_plain(writer, state, node)?;
     }
+
+    Ok(())
 }
 
 fn is_known_node(node: Node) -> bool {
-    matches!(
-        node.kind(),
-        "comment"
-            | "doc_comment"
-            | "option_declaration"
-            | "type_declaration"
-            | "event_declaration"
-            | "function_declaration"
-            | "optional_type"
-            | "struct_type"
-            | "enum_type"
-    )
+    is_comment_node(node)
+        || is_declaration_node(node)
+        || is_type_node(node)
+        || is_range_node(node)
+        || is_array_node(node)
+        || is_ident_node(node)
 }
 
 fn is_comment_node(node: Node) -> bool {
     matches!(node.kind(), "comment" | "doc_comment")
+}
+
+fn is_declaration_node(node: Node) -> bool {
+    matches!(
+        node.kind(),
+        "option_declaration" | "type_declaration" | "event_declaration" | "function_declaration"
+    )
+}
+
+fn is_type_node(node: Node) -> bool {
+    matches!(
+        node.kind(),
+        "type" | "primitive_type" | "optional_type" | "struct_type" | "enum_type"
+    )
+}
+
+fn is_range_node(node: Node) -> bool {
+    matches!(
+        node.kind(),
+        "range" | "range_empty" | "range_exact" | "range_inexact"
+    )
+}
+
+fn is_array_node(node: Node) -> bool {
+    matches!(
+        node.kind(),
+        "array" | "array_empty" | "array_exact" | "array_inexact"
+    )
+}
+
+fn is_ident_node(node: Node) -> bool {
+    matches!(node.kind(), "identifier")
 }

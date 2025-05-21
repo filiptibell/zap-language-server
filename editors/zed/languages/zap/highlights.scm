@@ -105,11 +105,13 @@
 
 ; Ranges
 (range
-  (inclusive_range) @operator)
+  (range_exact) @operator)
 (range
-  (exclusive_range) @operator)
-(range
-  (exact_range) @operator)
+  (range_inexact) @operator)
+(array
+  (array_exact) @operator)
+(array
+  (array_inexact) @operator)
 
 ; Optional types
 (optional_type

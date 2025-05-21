@@ -32,4 +32,4 @@ features = ["tracing", "tree-sitter"]
 
 [dependencies.tree-sitter-zap]
 git = "https://github.com/filiptibell/tree-sitter-zap"
-rev = "d6b0b49b59bb779ea12d8d070720b192bf8358dd"
+rev = "d0def4d5e6ff7a40c8d5ded573c3547c6b974a78"

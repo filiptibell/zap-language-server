@@ -150,7 +150,7 @@ fn format_variant_multiline(writer: &mut impl fmt::Write, state: &mut State, nod
         state.increase_depth();
 
         let mut cursor = node.walk();
-        for child in node.children(&mut cursor) {
+        for child in node.children(&mut cursor).skip(2) {
             if child.kind() == "property" {
                 let key = child.child(0).expect("valid enum variant field");
                 let typ = child.child(2).expect("valid enum variant field");

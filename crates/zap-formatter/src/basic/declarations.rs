@@ -2,7 +2,9 @@ use std::fmt;
 
 use tree_sitter::Node;
 
-use crate::{format_node, is_known_node, result::Result, state::State, types::format_type};
+use crate::{
+    format_node, format_plain, is_known_node, result::Result, state::State, types::format_type,
+};
 
 pub(crate) fn format_declaration(
     writer: &mut impl fmt::Write,
@@ -11,7 +13,11 @@ pub(crate) fn format_declaration(
 ) -> Result {
     format_declaration_pre(writer, state, node)?;
 
-    if node.kind() == "type_declaration" {
+    if node.kind() == "option_declaration" {
+        let value = node.child(3).expect("valid option declaration");
+        let value = state.text(value);
+        write!(writer, "{value}")?;
+    } else if node.kind() == "type_declaration" {
         if let Some(value) = node.child(3) {
             format_type(writer, state, value)?;
         }
@@ -21,7 +27,7 @@ pub(crate) fn format_declaration(
         state.increase_depth();
 
         let mut cursor = node.walk();
-        for child in node.children(&mut cursor) {
+        for child in node.children(&mut cursor).skip(2) {
             match child.kind() {
                 "event_from_field"
                 | "event_type_field"
@@ -72,7 +78,11 @@ fn format_declaration_field(writer: &mut impl fmt::Write, state: &mut State, nod
     write!(writer, "{key}: ")?;
 
     let value = node.child(2).expect("valid event or function field");
-    format_node(writer, state, value)?;
+    if is_known_node(value) {
+        format_node(writer, state, value)?;
+    } else {
+        format_plain(writer, state, value)?;
+    }
 
     writeln!(writer, ",")?;
 
