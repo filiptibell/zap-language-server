@@ -4,7 +4,7 @@ version = "0.1.0"
 schema_version = 1
 authors = ["Filip Tibell <filip.tibell@example.com>"]
 description = "Zap language support for Zed"
-repository = "https://github.com/filiptibell/zap-language"
+repository = "https://github.com/filiptibell/zap-language-server"
 
 [grammars.zap]
 repository = "https://github.com/filiptibell/tree-sitter-zap"
