@@ -2,43 +2,53 @@ use async_language_server::{
     lsp_types::{CompletionItemKind, Position},
     server::Document,
     tree_sitter::Node,
-    tree_sitter_utils::{find_child, ts_range_contains_lsp_position},
+    tree_sitter_utils::find_child,
 };
 
 use zap_language::docs::get_instance_class_names;
 
-pub fn completion(doc: &Document, pos: Position, node: Node) -> Vec<(CompletionItemKind, String)> {
-    // If our current node is the top-level "primitive type" we can
-    // probably drill down to something a bit more specific & useful
-    let node = if node.kind() == "primitive_type" {
-        find_child(node, |c| {
-            let is_ident = c.kind() == "identifier";
-            let is_inside = ts_range_contains_lsp_position(c.range(), pos);
-            is_ident && is_inside
-        })
-        .unwrap_or(node)
-    } else {
-        node
-    };
-
-    let mut items = Vec::new();
-    let Some(parent) = node.parent() else {
-        return items;
-    };
-
-    // Make sure that we are actually inside the range
-    // clause for an Instance primitive type, specifically
-    if parent.kind() == "primitive_type" && node.kind() == "identifier" {
-        if let Some(first_child) = parent.child(0) {
-            let first_text = doc.text().byte_slice(first_child.byte_range());
-            if first_text.as_str().is_some_and(|t| t == "Instance") {
-                items.extend(
-                    get_instance_class_names()
-                        .map(|name| (CompletionItemKind::VALUE, name.to_string())),
-                );
-            }
-        }
+pub fn completion(doc: &Document, _pos: Position, node: Node) -> Vec<(CompletionItemKind, String)> {
+    // We may have gotten the specific "identifier"
+    // node inside of a range, travel up from there
+    let mut node = node;
+    if matches!(node.kind(), "identifier") {
+        let Some(parent) = node.parent() else {
+            return vec![];
+        };
+        node = parent;
     }
 
-    items
+    // We should now be inside some kind of range node to
+    // autocomplete instance class names, or more specifically,
+    // an empty range, or one with a partial identifier / class name
+    if !matches!(node.kind(), "range_empty" | "range_ident") {
+        return vec![];
+    }
+
+    // The parent node must then be the top-level "range" node,
+    // which itself is then contained in a top-level "type" node
+    let parent = node.parent().unwrap();
+    let grandparent = parent.parent().unwrap();
+
+    // The top-level "type" node must then also be an Instance
+    // primitive to provide completions for instance class names
+    if find_child(grandparent, |c| {
+        let is_primitive = c.kind() == "primitive_type";
+        let is_instance = doc
+            .text()
+            .byte_slice(c.byte_range())
+            .as_str()
+            .is_some_and(|s| s == "Instance");
+        is_primitive && is_instance
+    })
+    .is_none()
+    {
+        return vec![];
+    }
+
+    // Return all possible class names and
+    // let the editor filter when typing
+    get_instance_class_names()
+        .map(|name| (CompletionItemKind::VALUE, name.to_string()))
+        .collect()
 }

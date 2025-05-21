@@ -91,13 +91,8 @@ pub fn is_type_reference(node: Node) -> bool {
     };
 
     match p.kind() {
-        // Optional types have an "inner" field
-        "optional_type" => p
-            .child_by_field_name("inner")
-            .is_some_and(is_ident_and_matches_this_node),
-
-        // Properties and sets have an inner "type" field
-        "property" | "set_type" => p
+        // Optionals, properties, and sets have an inner "type" field
+        "optional_type" | "property" | "set_type" => p
             .child_by_field_name("type")
             .is_some_and(is_ident_and_matches_this_node),
 
@@ -119,6 +114,10 @@ pub fn is_type_reference(node: Node) -> bool {
         "event_data_field" | "function_args_field" | "function_rets_field" => {
             find_child(p, is_ident_and_matches_this_node).is_some()
         }
+
+        // The encompassing "type" node has at least a single inner
+        // child, unnamed, which is the actual type contents of it
+        "type" => p.child(0).is_some_and(is_ident_and_matches_this_node),
 
         // Nothing else can be a type reference according to grammar
         _ => false,
