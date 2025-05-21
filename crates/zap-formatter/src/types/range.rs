@@ -16,15 +16,12 @@ pub(crate) fn format_range(writer: &mut impl fmt::Write, state: &mut State, node
         let mut cursor = node.walk();
         let mut contents = Vec::new();
         for child in node.children(&mut cursor) {
-            if matches!(child.kind(), "number" | "identifier") {
+            if matches!(child.kind(), ".." | "number" | "identifier") {
                 contents.push(state.text(child));
             }
         }
 
-        for (index, text) in contents.iter().enumerate() {
-            if index > 0 {
-                write!(writer, "..")?;
-            }
+        for text in contents {
             write!(writer, "{text}")?;
         }
 
