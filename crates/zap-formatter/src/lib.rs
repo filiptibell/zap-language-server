@@ -10,7 +10,7 @@ mod types;
 mod utils;
 
 use self::basic::{
-    comments::{format_inline_comment, format_top_level_comment},
+    comments::{format_comment, format_inline_comment},
     declarations::format_declaration,
     options::format_option_declaration,
     unknown::format_unknown,
@@ -54,7 +54,7 @@ pub fn format_document(writer: &mut impl fmt::Write, config: Config, root: Node)
         }
 
         if child.kind() == "comment" {
-            format_top_level_comment(writer, &mut state, child)?;
+            format_comment(writer, &mut state, child)?;
         } else {
             format_node(writer, &mut state, child)?;
         }
