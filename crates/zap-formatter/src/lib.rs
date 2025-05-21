@@ -99,7 +99,13 @@ fn is_declaration_node(node: Node) -> bool {
 fn is_type_node(node: Node) -> bool {
     matches!(
         node.kind(),
-        "type" | "primitive_type" | "optional_type" | "struct_type" | "enum_type"
+        "type"
+            | "primitive_type"
+            | "optional_type"
+            | "struct_type"
+            | "enum_type"
+            | "map_type"
+            | "set_type"
     )
 }
 
