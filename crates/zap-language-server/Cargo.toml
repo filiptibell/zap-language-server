@@ -27,7 +27,7 @@ zap-formatter = { path = "../zap-formatter" }
 
 [dependencies.async-language-server]
 git = "https://github.com/filiptibell/async-language-server"
-rev = "a1cdf8f8541bf407f92a761a0b6db0b080673dbc"
+rev = "80ce3afcd3e0914fa5c6fff55d4d253e167ff561"
 features = ["tracing", "tree-sitter"]
 
 [dependencies.tree-sitter-zap]
