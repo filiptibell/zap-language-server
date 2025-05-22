@@ -14,9 +14,18 @@
         "type": "git",
         "url": "https://github.com/filiptibell/zap-language-server.git"
     },
+    "engines": {
+        "vscode": "^1.90.0"
+    },
     "categories": [
         "Other"
     ],
+    "activationEvents": [
+        "onLanguage:toml",
+        "onLanguage:json",
+        "onStartupFinished"
+    ],
+    "main": "./out/extension.js",
     "contributes": {
         "languages": [
             {
@@ -37,5 +46,27 @@
                 "path": "./syntaxes/zap.tmLanguage.json"
             }
         ]
-    }
+    },
+    "scripts": {
+        "vscode:prepublish": "bun run esbuild -- --minify",
+        "esbuild": "esbuild ./src/extension.js --bundle --outfile=out/extension.js --external:vscode --platform=node --target=node16.13 --sourcemap",
+        "esbuild-watch": "bun run esbuild -- --watch",
+        "compile": "tsc -p ./ && bun run esbuild",
+        "watch": "tsc -p ./ && bun run esbuild-watch",
+        "extension-package": "rm -rf './bin' && mkdir -p './bin' && vsce package --out './bin/' --skip-license",
+        "extension-install": "bun run extension-package && code --install-extension ./bin/*.vsix"
+    },
+    "devDependencies": {
+        "@types/node": "^22.0",
+        "@types/vscode": "^1.81.0",
+        "@vscode/vsce": "^3.4.1",
+        "esbuild": "^0.24.2",
+        "typescript": "^5.7.2"
+    },
+    "dependencies": {
+        "vscode-languageclient": "^9.0.1"
+    },
+    "trustedDependencies": [
+        "@vscode/vsce-sign"
+    ]
 }
