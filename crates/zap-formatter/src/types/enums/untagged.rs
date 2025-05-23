@@ -1,8 +1,11 @@
 use std::fmt;
 
-use zap_language::tree_sitter::Node;
+use zap_language::{
+    tree_sitter::Node,
+    tree_sitter_utils::{is_comment_node, is_known_node},
+};
 
-use crate::{format_node, is_comment_node, is_known_node, result::Result, state::State};
+use crate::{format_node, result::Result, state::State};
 
 /**
     Formats an untagged enum as a single line.

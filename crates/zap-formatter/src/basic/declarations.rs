@@ -1,10 +1,8 @@
 use std::fmt;
 
-use zap_language::tree_sitter::Node;
+use zap_language::{tree_sitter::Node, tree_sitter_utils::is_known_node};
 
-use crate::{
-    format_node, format_plain, is_known_node, result::Result, state::State, types::format_type,
-};
+use crate::{format_node, format_plain, result::Result, state::State, types::format_type};
 
 pub(crate) fn format_declaration(
     writer: &mut impl fmt::Write,

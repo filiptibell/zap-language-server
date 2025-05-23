@@ -1,10 +1,11 @@
 use std::fmt;
 
-use zap_language::tree_sitter::Node;
-
-use crate::{
-    format_node, is_comment_node, is_known_node, result::Result, state::State, utils::is_type_empty,
+use zap_language::{
+    tree_sitter::Node,
+    tree_sitter_utils::{is_comment_node, is_known_node},
 };
+
+use crate::{format_node, result::Result, state::State, utils::is_type_empty};
 
 /**
     Formats a tagged enum using compact formatting.
