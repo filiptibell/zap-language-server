@@ -29,7 +29,3 @@ zap-formatter = { path = "../zap-formatter" }
 git = "https://github.com/filiptibell/async-language-server"
 rev = "80ce3afcd3e0914fa5c6fff55d4d253e167ff561"
 features = ["tracing", "tree-sitter"]
-
-[dependencies.tree-sitter-zap]
-git = "https://github.com/filiptibell/tree-sitter-zap"
-rev = "d0def4d5e6ff7a40c8d5ded573c3547c6b974a78"

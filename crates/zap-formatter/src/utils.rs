@@ -1,4 +1,4 @@
-use tree_sitter::Node;
+use zap_language::tree_sitter::Node;
 
 #[derive(Debug, Clone)]
 pub(crate) struct DepthFirstNodeIterator<'a> {

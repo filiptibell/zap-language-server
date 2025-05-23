@@ -13,10 +13,5 @@ workspace = true
 
 [dependencies]
 thiserror = "2.0"
-tree-sitter = "0.25"
 
 zap-language = { path = "../zap-language" }
-
-[dependencies.tree-sitter-zap]
-git = "https://github.com/filiptibell/tree-sitter-zap"
-rev = "d0def4d5e6ff7a40c8d5ded573c3547c6b974a78"

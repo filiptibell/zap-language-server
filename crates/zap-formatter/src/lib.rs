@@ -1,6 +1,6 @@
 use std::fmt;
 
-use tree_sitter::Node;
+use zap_language::tree_sitter::Node;
 
 mod basic;
 mod config;

@@ -61,7 +61,7 @@ impl Server for ZapLanguageServer {
             DocumentMatcher::new("Zap Document")
                 .with_url_globs(["*.zap"])
                 .with_lang_strings(["Zap"])
-                .with_lang_grammar(tree_sitter_zap::LANGUAGE.into()),
+                .with_lang_grammar(zap_language::TS_LANGUAGE.into()),
         ]
     }
 

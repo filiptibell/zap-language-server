@@ -1354,14 +1354,16 @@ name = "zap-formatter"
 version = "0.0.0"
 dependencies = [
  "thiserror",
- "tree-sitter",
- "tree-sitter-zap",
  "zap-language",
 ]
 
 [[package]]
 name = "zap-language"
 version = "0.0.0"
+dependencies = [
+ "tree-sitter",
+ "tree-sitter-zap",
+]
 
 [[package]]
 name = "zap-language-server"
@@ -1376,7 +1378,6 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
- "tree-sitter-zap",
  "zap-formatter",
  "zap-language",
 ]

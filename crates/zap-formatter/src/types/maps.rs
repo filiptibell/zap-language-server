@@ -1,6 +1,6 @@
 use std::fmt;
 
-use tree_sitter::Node;
+use zap_language::tree_sitter::Node;
 
 use crate::{format_node, result::Result, state::State};
 

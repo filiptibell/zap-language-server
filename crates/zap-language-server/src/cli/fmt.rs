@@ -25,7 +25,7 @@ impl FormatCommand {
     pub async fn run(self) -> Result<()> {
         let mut parser = tree_sitter::Parser::new();
         parser
-            .set_language(&tree_sitter_zap::LANGUAGE.into())
+            .set_language(&zap_language::TS_LANGUAGE.into())
             .context("Failed to set parser language")?;
 
         let use_stdin = self.file.file_name().is_some_and(|n| n == OsStr::new("-"));
