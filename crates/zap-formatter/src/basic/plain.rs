@@ -1,8 +1,8 @@
 use std::fmt;
 
-use zap_language::tree_sitter::Node;
+use zap_language::{tree_sitter::Node, tree_sitter_utils::DepthFirstNodeIterator};
 
-use crate::{result::Result, state::State, utils::DepthFirstNodeIterator};
+use crate::{result::Result, state::State};
 
 pub(crate) fn format_plain(writer: &mut impl fmt::Write, state: &mut State, node: Node) -> Result {
     let text = DepthFirstNodeIterator::new(node)

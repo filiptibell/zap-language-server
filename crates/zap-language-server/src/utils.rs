@@ -3,6 +3,49 @@
 use std::collections::HashMap;
 
 use async_language_server::{server::Document, tree_sitter::Node, tree_sitter_utils::find_child};
+use zap_language::tree_sitter_utils::DepthFirstNodeIterator;
+
+/**
+    Checks if the given node is a declared type, meaning
+    it is the identifier inside a `type_declaration` node.
+*/
+pub fn is_declared_type(node: Node) -> bool {
+    node.parent().is_some_and(|parent| {
+        if parent.kind() == "type_declaration" {
+            parent
+                .child_by_field_name("name")
+                .is_some_and(|n| n == node)
+        } else {
+            false
+        }
+    })
+}
+
+/**
+    Finds a specific declared type by its name in the given document,
+    and returns the corresponding node for the full type declaration.
+*/
+pub fn find_declared_type(doc: &Document, type_name: impl ToString) -> Option<Node> {
+    let root = doc.node_at_root()?;
+    let name = type_name.to_string();
+
+    let mut cursor = root.walk();
+    for top_level in root.children(&mut cursor) {
+        if top_level.kind() == "type_declaration" {
+            let mut top_level_cursor = top_level.walk();
+            for child in top_level.children(&mut top_level_cursor) {
+                if child.kind() == "identifier" {
+                    let text = doc.text().byte_slice(child.byte_range());
+                    if text.as_str().is_some_and(|t| t == name.as_str()) {
+                        return Some(top_level);
+                    }
+                }
+            }
+        }
+    }
+
+    None
+}
 
 /**
     Gathers all of the declared types in the given document, and returns
@@ -32,32 +75,6 @@ pub fn gather_declared_types(doc: &Document) -> HashMap<String, Node> {
     }
 
     types
-}
-
-/**
-    Finds a specific declared type by its name in the given document,
-    and returns the corresponding node for the full type declaration.
-*/
-pub fn find_declared_type(doc: &Document, type_name: impl ToString) -> Option<Node> {
-    let root = doc.node_at_root()?;
-    let name = type_name.to_string();
-
-    let mut cursor = root.walk();
-    for top_level in root.children(&mut cursor) {
-        if top_level.kind() == "type_declaration" {
-            let mut top_level_cursor = top_level.walk();
-            for child in top_level.children(&mut top_level_cursor) {
-                if child.kind() == "identifier" {
-                    let text = doc.text().byte_slice(child.byte_range());
-                    if text.as_str().is_some_and(|t| t == name.as_str()) {
-                        return Some(top_level);
-                    }
-                }
-            }
-        }
-    }
-
-    None
 }
 
 /**
@@ -122,4 +139,15 @@ pub fn is_type_reference(node: Node) -> bool {
         // Nothing else can be a type reference according to grammar
         _ => false,
     }
+}
+
+/**
+    Gathers all of the type references in the given node, searching
+    all descendants and returning them in depth-first node order.
+*/
+pub fn gather_type_references(node: Node) -> Vec<Node> {
+    DepthFirstNodeIterator::new(node)
+        .filter(|n| n.kind() == "identifier")
+        .filter(|n| is_type_reference(*n))
+        .collect()
 }

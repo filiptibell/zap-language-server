@@ -2,10 +2,10 @@ use std::fmt;
 
 use zap_language::{
     tree_sitter::Node,
-    tree_sitter_utils::{is_comment_node, is_known_node},
+    tree_sitter_utils::{is_comment_node, is_known_node, is_type_empty},
 };
 
-use crate::{format_node, result::Result, state::State, utils::is_type_empty};
+use crate::{format_node, result::Result, state::State};
 
 pub(crate) fn format_struct(writer: &mut impl fmt::Write, state: &mut State, node: Node) -> Result {
     if is_type_empty(node, None) {

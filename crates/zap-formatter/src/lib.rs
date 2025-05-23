@@ -7,14 +7,12 @@ mod config;
 mod result;
 mod state;
 mod types;
-mod utils;
 
 use self::basic::{
     comments::format_comment, declarations::format_declaration, plain::format_plain,
 };
 use self::state::State;
 use self::types::format_type;
-use self::utils::DepthFirstNodeIterator;
 
 pub use self::config::{Config, Indentation};
 pub use self::result::{Error, Result};
@@ -28,6 +26,8 @@ pub use self::result::{Error, Result};
     - If the formatter encounters an internal error / bug
 */
 pub fn format_document(writer: &mut impl fmt::Write, config: Config, root: Node) -> Result {
+    use zap_language::tree_sitter_utils::DepthFirstNodeIterator;
+
     for node in DepthFirstNodeIterator::new(root) {
         if node.kind() == "ERROR" {
             let start = node.range().start_point;

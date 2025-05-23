@@ -1,9 +1,12 @@
 use std::collections::HashSet;
 use std::fmt;
 
-use zap_language::{tree_sitter::Node, tree_sitter_utils::is_known_node};
+use zap_language::{
+    tree_sitter::Node,
+    tree_sitter_utils::{is_known_node, is_type_empty},
+};
 
-use crate::{result::Result, state::State, utils::is_type_empty};
+use crate::{result::Result, state::State};
 
 mod tagged;
 mod untagged;
