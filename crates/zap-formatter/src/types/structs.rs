@@ -8,7 +8,7 @@ use zap_language::{
 use crate::{format_node, result::Result, state::State, utils::is_type_empty};
 
 pub(crate) fn format_struct(writer: &mut impl fmt::Write, state: &mut State, node: Node) -> Result {
-    if is_type_empty(node) {
+    if is_type_empty(node, None) {
         write!(writer, "struct {{}}")?;
     } else {
         writeln!(writer, "struct {{")?;

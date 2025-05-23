@@ -90,6 +90,7 @@ fn format_variant_compact(
 
     ```zap
     type Tagged = enum "Kind" {
+        VariantEmpty {},
         VariantOne {
             Foo: u8,
         },
@@ -143,7 +144,7 @@ fn format_variant_multiline(writer: &mut impl fmt::Write, state: &mut State, nod
     let ident = node.child(0).expect("valid enum variant");
     let ident = state.text(ident);
 
-    if is_type_empty(node) {
+    if is_type_empty(node, Some(1)) {
         write!(writer, "{ident} {{}}")?;
     } else {
         writeln!(writer, "{ident} {{")?;

@@ -13,7 +13,7 @@ use self::untagged::{format_untagged_grid, format_untagged_line, format_untagged
 
 pub(crate) fn format_enum(writer: &mut impl fmt::Write, state: &mut State, node: Node) -> Result {
     let tag = node.child_by_field_name("tag").map(|t| state.text(t));
-    if is_type_empty(node) {
+    if is_type_empty(node, Some(1)) {
         // No contents, single line with no space inbetween braces
         if let Some(tag) = tag {
             write!(writer, "enum {tag} {{}}")?;
