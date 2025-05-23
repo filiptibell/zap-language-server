@@ -7,16 +7,6 @@ use self::definitions::{
     VARIANT_DEFINITIONS,
 };
 
-#[must_use]
-pub fn is_punctuation(c: char) -> bool {
-    matches!(c, '(' | ')' | '[' | ']' | '{' | '}' | ':' | ',' | '.')
-}
-
-#[must_use]
-pub fn is_punctuation_str(s: impl AsRef<str>) -> bool {
-    s.as_ref().chars().all(is_punctuation)
-}
-
 pub fn get_option_names() -> impl Iterator<Item = &'static str> {
     OPTION_DEFINITIONS.iter().map(|(name, _, _)| *name)
 }

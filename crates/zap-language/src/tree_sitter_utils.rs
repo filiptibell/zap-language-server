@@ -57,3 +57,18 @@ pub fn is_array_node(node: Node) -> bool {
 pub fn is_ident_node(node: Node) -> bool {
     matches!(node.kind(), "identifier")
 }
+
+#[must_use]
+pub fn is_punctuation(c: char) -> bool {
+    matches!(c, '(' | ')' | '[' | ']' | '{' | '}' | ':' | ',' | '.')
+}
+
+#[must_use]
+pub fn is_punctuation_str(s: impl AsRef<str>) -> bool {
+    s.as_ref().chars().all(is_punctuation)
+}
+
+#[must_use]
+pub fn is_punctuation_node(node: Node) -> bool {
+    is_punctuation_str(node.kind())
+}

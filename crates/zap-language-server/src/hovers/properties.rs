@@ -5,7 +5,7 @@ use async_language_server::{
     tree_sitter_utils::{lsp_position_to_ts_point, ts_range_to_lsp_range},
 };
 
-use zap_language::docs::{find_property, is_punctuation_str};
+use zap_language::{docs::find_property, tree_sitter_utils::is_punctuation_str};
 
 pub fn hover(doc: &Document, pos: Position, node: Node) -> Option<Hover> {
     let parent = node.parent()?;
