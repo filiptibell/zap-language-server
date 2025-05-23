@@ -5,6 +5,7 @@ pub fn is_known_node(node: Node) -> bool {
     is_comment_node(node)
         || is_declaration_node(node)
         || is_type_node(node)
+        || is_tuple_node(node)
         || is_range_node(node)
         || is_array_node(node)
         || is_ident_node(node)
@@ -35,6 +36,11 @@ pub fn is_type_node(node: Node) -> bool {
             | "map_type"
             | "set_type"
     )
+}
+
+#[must_use]
+pub fn is_tuple_node(node: Node) -> bool {
+    matches!(node.kind(), "tuple" | "tuple_value")
 }
 
 #[must_use]

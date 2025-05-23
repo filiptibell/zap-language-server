@@ -65,14 +65,18 @@ pub fn format_document(writer: &mut impl fmt::Write, config: Config, root: Node)
 fn format_node(writer: &mut impl fmt::Write, state: &mut State, node: Node) -> Result {
     use zap_language::tree_sitter_utils::{
         is_array_node, is_comment_node, is_declaration_node, is_ident_node, is_range_node,
-        is_type_node,
+        is_tuple_node, is_type_node,
     };
 
     if is_comment_node(node) {
         format_comment(writer, state, node)?;
     } else if is_declaration_node(node) {
         format_declaration(writer, state, node)?;
-    } else if is_type_node(node) || is_range_node(node) || is_array_node(node) {
+    } else if is_type_node(node)
+        || is_tuple_node(node)
+        || is_range_node(node)
+        || is_array_node(node)
+    {
         format_type(writer, state, node)?;
     } else if is_ident_node(node) {
         format_plain(writer, state, node)?;

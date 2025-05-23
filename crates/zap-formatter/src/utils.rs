@@ -39,7 +39,10 @@ impl<'a> Iterator for DepthFirstNodeIterator<'a> {
 pub(crate) fn is_type_empty(node: Node, skip: Option<usize>) -> bool {
     let mut cursor = node.walk();
     for child in node.children(&mut cursor).skip(skip.unwrap_or_default()) {
-        if matches!(child.kind(), "property" | "identifier" | "enum_variant") {
+        if matches!(
+            child.kind(),
+            "property" | "identifier" | "enum_variant" | "tuple_value"
+        ) {
             return false;
         }
     }
