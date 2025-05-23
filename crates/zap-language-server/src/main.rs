@@ -2,6 +2,7 @@ mod cli;
 mod completions;
 mod definitions;
 mod hovers;
+mod renames;
 mod server;
 mod tracing;
 mod utils;

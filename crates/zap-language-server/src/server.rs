@@ -2,8 +2,9 @@ use async_language_server::{
     lsp_types::{
         ClientCapabilities, CompletionItem, CompletionOptions, CompletionParams,
         CompletionResponse, DocumentFormattingParams, GotoDefinitionParams, GotoDefinitionResponse,
-        Hover, HoverParams, HoverProviderCapability, OneOf, ServerCapabilities, ServerInfo,
-        TextEdit,
+        Hover, HoverParams, HoverProviderCapability, OneOf, PrepareRenameResponse, RenameOptions,
+        RenameParams, ServerCapabilities, ServerInfo, TextDocumentPositionParams, TextEdit,
+        WorkDoneProgressOptions, WorkspaceEdit,
     },
     server::{DocumentMatcher, Server, ServerError, ServerResult, ServerState},
     tree_sitter_utils::ts_range_to_lsp_range,
@@ -17,6 +18,7 @@ use crate::{
     },
     definitions::definition_for_types,
     hovers::{hover_for_keywords, hover_for_options, hover_for_properties, hover_for_types},
+    renames::{rename_for_types, rename_prepare_for_types},
 };
 
 #[derive(Debug, Clone)]
@@ -45,6 +47,12 @@ impl Server for ZapLanguageServer {
     fn server_capabilities(_: ClientCapabilities) -> Option<ServerCapabilities> {
         Some(ServerCapabilities {
             hover_provider: Some(HoverProviderCapability::Simple(true)),
+            rename_provider: Some(OneOf::Right(RenameOptions {
+                prepare_provider: Some(true),
+                work_done_progress_options: WorkDoneProgressOptions {
+                    work_done_progress: None,
+                },
+            })),
             definition_provider: Some(OneOf::Left(true)),
             completion_provider: Some(CompletionOptions {
                 resolve_provider: Some(true),
@@ -132,6 +140,44 @@ impl Server for ZapLanguageServer {
                     .collect(),
             )))
         }
+    }
+
+    async fn rename_prepare(
+        &self,
+        state: ServerState,
+        params: TextDocumentPositionParams,
+    ) -> ServerResult<Option<PrepareRenameResponse>> {
+        let url = params.text_document.uri;
+        let pos = params.position;
+
+        let Some(doc) = state.document(&url) else {
+            return Ok(None);
+        };
+        let Some(node) = doc.node_at_position_named(pos) else {
+            tracing::debug!("Missing node for rename at {}:{}", pos.line, pos.character);
+            return Ok(None);
+        };
+
+        Ok(rename_prepare_for_types(&doc, pos, node))
+    }
+
+    async fn rename(
+        &self,
+        state: ServerState,
+        params: RenameParams,
+    ) -> ServerResult<Option<WorkspaceEdit>> {
+        let url = params.text_document_position.text_document.uri;
+        let pos = params.text_document_position.position;
+
+        let Some(doc) = state.document(&url) else {
+            return Ok(None);
+        };
+        let Some(node) = doc.node_at_position_named(pos) else {
+            tracing::debug!("Missing node for rename at {}:{}", pos.line, pos.character);
+            return Ok(None);
+        };
+
+        Ok(rename_for_types(&doc, pos, node, params.new_name.as_str()))
     }
 
     async fn definition(
