@@ -81,7 +81,7 @@
 (property
   name: (identifier) @property)
 
-(event_data_tuple
+(tuple_value
   name: (identifier) @property)
 
 (event_from_field "from" @property)

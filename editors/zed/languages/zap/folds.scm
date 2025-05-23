@@ -6,5 +6,5 @@
   (function_declaration)
 ] @fold
 
-; Allow folding of comma-separated lists that span multiple lines
-(event_data_tuple) @fold
+; Allow folding of comma-separated lists that may span multiple lines
+(tuple) @fold

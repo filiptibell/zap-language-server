@@ -1151,7 +1151,7 @@ checksum = "c4013970217383f67b18aef68f6fb2e8d409bc5755227092d32efb0422ba24b8"
 [[package]]
 name = "tree-sitter-zap"
 version = "0.1.0"
-source = "git+https://github.com/filiptibell/tree-sitter-zap?rev=d0def4d5e6ff7a40c8d5ded573c3547c6b974a78#d0def4d5e6ff7a40c8d5ded573c3547c6b974a78"
+source = "git+https://github.com/filiptibell/tree-sitter-zap?rev=90a8db361fda7f487cdba5d21a816aaad027f2a6#90a8db361fda7f487cdba5d21a816aaad027f2a6"
 dependencies = [
  "cc",
  "tree-sitter-language",
