@@ -6,7 +6,7 @@ Also supports the following features using the [LSP](https://microsoft.github.io
 
 - 🔮 Information on hover for keywords, primitive types, and user-defined types
 - 🪄 Completion for keywords, primitive types, and user-defined types
-- 🎯 Go to definition for user-defined types
+- 🎯 Go to definition & renaming for user-defined types
 - 📝 Full document auto-formatting
 
 ## Language Server
