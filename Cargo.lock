@@ -1351,7 +1351,7 @@ dependencies = [
 
 [[package]]
 name = "zap-formatter"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "thiserror",
  "zap-language",
@@ -1359,7 +1359,7 @@ dependencies = [
 
 [[package]]
 name = "zap-language"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "tree-sitter",
  "tree-sitter-zap",
@@ -1367,7 +1367,7 @@ dependencies = [
 
 [[package]]
 name = "zap-language-server"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-language-server",
