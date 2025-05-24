@@ -2,9 +2,9 @@ use async_language_server::{
     lsp_types::{
         ClientCapabilities, CompletionItem, CompletionOptions, CompletionParams,
         CompletionResponse, DocumentFormattingParams, GotoDefinitionParams, GotoDefinitionResponse,
-        Hover, HoverParams, HoverProviderCapability, OneOf, PrepareRenameResponse, RenameOptions,
-        RenameParams, ServerCapabilities, ServerInfo, TextDocumentPositionParams, TextEdit,
-        WorkDoneProgressOptions, WorkspaceEdit,
+        Hover, HoverParams, HoverProviderCapability, Location, OneOf, PrepareRenameResponse,
+        ReferenceParams, RenameOptions, RenameParams, ServerCapabilities, ServerInfo,
+        TextDocumentPositionParams, TextEdit, WorkDoneProgressOptions, WorkspaceEdit,
     },
     server::{DocumentMatcher, Server, ServerError, ServerResult, ServerState},
     tree_sitter_utils::ts_range_to_lsp_range,
@@ -18,6 +18,7 @@ use crate::{
     },
     definitions::definition_for_types,
     hovers::{hover_for_keywords, hover_for_options, hover_for_properties, hover_for_types},
+    references::references_for_types,
     renames::{rename_for_types, rename_prepare_for_types},
 };
 
@@ -54,6 +55,7 @@ impl Server for ZapLanguageServer {
                 },
             })),
             definition_provider: Some(OneOf::Left(true)),
+            references_provider: Some(OneOf::Left(true)),
             completion_provider: Some(CompletionOptions {
                 resolve_provider: Some(true),
                 trigger_characters: Some(completion_trigger_characters()),
@@ -211,6 +213,35 @@ impl Server for ZapLanguageServer {
         );
 
         Ok(definition_for_types(&doc, pos, node))
+    }
+
+    async fn references(
+        &self,
+        state: ServerState,
+        params: ReferenceParams,
+    ) -> ServerResult<Option<Vec<Location>>> {
+        let url = params.text_document_position.text_document.uri;
+        let pos = params.text_document_position.position;
+
+        let Some(doc) = state.document(&url) else {
+            return Ok(None);
+        };
+        let Some(node) = doc.node_at_position_named(pos) else {
+            tracing::debug!(
+                "Missing node for references at {}:{}",
+                pos.line,
+                pos.character
+            );
+            return Ok(None);
+        };
+
+        tracing::debug!(
+            "Getting references for node at {}:{}",
+            pos.line,
+            pos.character
+        );
+
+        Ok(references_for_types(&doc, pos, node))
     }
 
     async fn document_format(
