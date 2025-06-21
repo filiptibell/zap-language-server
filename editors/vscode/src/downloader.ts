@@ -1,9 +1,9 @@
 import * as fs from "fs/promises";
 import * as vscode from "vscode";
-import * as os from "os";
 import JSZip from "jszip";
 
-import { BINARY_NAME, BINARY_ROOT_DIR, GITHUB_REPO } from "./constants";
+import { GITHUB_REPO } from "./constants";
+import { PlatformStrings } from "./strings";
 
 // Types
 
@@ -22,62 +22,39 @@ type ParsedRelease = {
 	downloadUrl: string;
 };
 
-// System helpers
-
-function systemOs(): string {
-	switch (os.platform()) {
-		case "win32":
-			return "windows";
-		case "darwin":
-			return "macos";
-		case "linux":
-			return "linux";
-		default:
-			throw new Error(`Unsupported OS: ${os.platform()}`);
-	}
-}
-
-function systemArch(): string {
-	switch (os.arch()) {
-		case "x64":
-			return "x64";
-		case "arm64":
-			return "aarch64";
-		default:
-			throw new Error(`Unsupported architecture: ${os.arch()}`);
-	}
-}
-
 // Downloader class
 
 export class Downloader {
 	private latestVersion: string | null = null;
 	private latestDownloaded: boolean = false;
 
-	private readonly exeName: string;
+	private readonly strings: PlatformStrings;
 
 	constructor(private readonly context: vscode.ExtensionContext) {
-		if (os.platform() === "win32") {
-			this.exeName = `${BINARY_NAME}.exe`;
-		} else {
-			this.exeName = BINARY_NAME;
-		}
+		this.strings = new PlatformStrings();
 	}
 
 	// Private
 
 	private dirForVersions(): vscode.Uri {
-		const base = this.context.extensionUri;
-		return vscode.Uri.joinPath(base, BINARY_ROOT_DIR);
+		return vscode.Uri.joinPath(
+			this.context.extensionUri,
+			this.strings.serverBinaryRoot(),
+		);
 	}
 
 	private dirForVersion(version: string): vscode.Uri {
-		return vscode.Uri.joinPath(this.dirForVersions(), version);
+		return vscode.Uri.joinPath(
+			this.dirForVersions(),
+			this.strings.serverBinaryDir(version),
+		);
 	}
 
 	private fileForVersion(version: string): vscode.Uri {
-		const dir = this.dirForVersion(version);
-		return vscode.Uri.joinPath(dir, this.exeName);
+		return vscode.Uri.joinPath(
+			this.dirForVersion(version),
+			this.strings.serverBinaryPath(),
+		);
 	}
 
 	private async cleanupAllVersionsExcept(version: string): Promise<void> {
@@ -104,11 +81,11 @@ export class Downloader {
 
 		const data = (await response.json()) as GithubRelease;
 		const version = data.tag_name;
-		const systemId = `${systemOs()}-${systemArch()}`;
+		const name = this.strings.releaseAssetName(version);
 
 		let downloadUrl: string | null = null;
 		for (const asset of data.assets) {
-			if (asset.name.includes(systemId)) {
+			if (asset.name == name) {
 				downloadUrl = asset.browser_download_url;
 				break;
 			}
@@ -116,7 +93,7 @@ export class Downloader {
 		if (!downloadUrl) {
 			const assetNames = data.assets.map((a) => a.name).join(", ");
 			throw new Error(
-				`No release asset was found matching "${systemId}".` +
+				`No release asset was found matching "${name}".` +
 					`Found release assets: ${assetNames}`,
 			);
 		}
@@ -135,16 +112,17 @@ export class Downloader {
 		const zipBytes = await response.arrayBuffer();
 		const zipFile = await JSZip.loadAsync(zipBytes);
 
+		const fileName = this.strings.serverBinaryPath();
 		for (const relativePath in zipFile.files) {
 			const entry = zipFile.files[relativePath];
-			if (entry.name === this.exeName) {
+			if (entry.name === fileName) {
 				const fileContent = await entry.async("nodebuffer");
 				return fileContent;
 			}
 		}
 
 		throw new Error(
-			`Failed to find "${this.exeName}" in the latest release asset`,
+			`Failed to find "${fileName}" in the latest release asset`,
 		);
 	}
 
@@ -172,13 +150,13 @@ export class Downloader {
 
 		// 3a. Write the binary to disk at the correct location
 		const dir = this.dirForVersion(latest.version);
-		const file = vscode.Uri.joinPath(dir, this.exeName);
+		const file = this.fileForVersion(latest.version);
 		await vscode.workspace.fs.createDirectory(dir);
 		await vscode.workspace.fs.writeFile(file, new Uint8Array(binary));
 
 		// 3b. Make the binary executable on Unix systems, note
 		//     that the VSCODE fs API doesn't support chmod
-		if (os.platform() !== "win32") {
+		if (this.strings.isUnix()) {
 			await fs.chmod(file.fsPath, 0o755);
 		}
 
