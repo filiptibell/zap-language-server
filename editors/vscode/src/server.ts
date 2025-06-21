@@ -1,18 +1,17 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
 import * as vscode from "vscode";
-import * as os from "os";
 import which from "which";
 
 import {
 	Executable,
-	ExecutableOptions,
 	LanguageClient,
 	LanguageClientOptions,
 	ServerOptions,
 } from "vscode-languageclient/node";
 
 import { getExtensionContext } from "./extension";
+import { Downloader } from "./downloader";
 
 let client: LanguageClient | undefined;
 let outputChannel: vscode.OutputChannel;
@@ -29,11 +28,28 @@ export const startServer = async () => {
 
 	const context = getExtensionContext();
 
-	// Check if we have zap-language-server available on PATH
+	// Check if we have the server binary on PATH, download it if not
 
-	const resolved = await which("zap-language-server", { nothrow: true });
+	let resolved = await which("zap-language-server", { nothrow: true });
 	if (!resolved) {
-		throw new Error("zap-language-server not found on PATH");
+		const downloader = new Downloader(
+			context,
+			"filiptibell",
+			"zap-language-server",
+			"zap-language-server",
+		);
+
+		await vscode.window.withProgress(
+			{
+				location: vscode.ProgressLocation.Window,
+				title: "Downloading Zap Language Server...",
+			},
+			async () => {
+				await downloader.download();
+			},
+		);
+
+		resolved = downloader.path();
 	}
 
 	// Create persistent output channel if one does not exist
