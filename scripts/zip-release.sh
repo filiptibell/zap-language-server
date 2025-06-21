@@ -3,6 +3,8 @@
 # This script is used to zip up the built binary for release,
 # and is used in the GitHub workflow to create a release artifact
 
+set -euo pipefail
+
 BIN_NAME="zap-language-server"
 BIN_EXT=""
 CWD="$PWD"
