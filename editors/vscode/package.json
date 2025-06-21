@@ -52,14 +52,16 @@
         "compile": "tsc -p ./ && bun run esbuild",
         "watch": "tsc -p ./ && bun run esbuild-watch",
         "extension-package": "rm -rf './bin' && mkdir -p './bin' && vsce package --out './bin/' --skip-license",
-        "extension-install": "bun run extension-package && code --install-extension ./bin/*.vsix"
+        "extension-install": "bun run extension-package && code --install-extension ./bin/*.vsix",
+        "extension-publish": "bun run extension-package && vsce publish --skip-duplicate --target $VSCODE_TARGET && ovsx publish --skip-duplicate --target $VSCODE_TARGET"
     },
     "devDependencies": {
         "@types/node": "^22.0",
         "@types/vscode": "^1.81.0",
         "@vscode/vsce": "^3.4.1",
         "esbuild": "^0.24.2",
-        "typescript": "^5.7.2"
+        "typescript": "^5.7.2",
+        "ovsx": "^0.10.4"
     },
     "dependencies": {
         "vscode-languageclient": "^9.0.1"
