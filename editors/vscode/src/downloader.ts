@@ -3,6 +3,8 @@ import * as vscode from "vscode";
 import * as os from "os";
 import JSZip from "jszip";
 
+import { BINARY_NAME, BINARY_ROOT_DIR, GITHUB_REPO } from "./constants";
+
 // Types
 
 type GithubReleaseAsset = {
@@ -52,14 +54,13 @@ export class Downloader {
 	private latestVersion: string | null = null;
 	private latestDownloaded: boolean = false;
 
-	constructor(
-		private readonly context: vscode.ExtensionContext,
-		private readonly githubUser: string,
-		private readonly githubRepo: string,
-		private readonly exeName: string,
-	) {
+	private readonly exeName: string;
+
+	constructor(private readonly context: vscode.ExtensionContext) {
 		if (os.platform() === "win32") {
-			this.exeName += ".exe";
+			this.exeName = `${BINARY_NAME}.exe`;
+		} else {
+			this.exeName = BINARY_NAME;
 		}
 	}
 
@@ -67,7 +68,7 @@ export class Downloader {
 
 	private dirForVersions(): vscode.Uri {
 		const base = this.context.extensionUri;
-		return vscode.Uri.joinPath(base, "bin");
+		return vscode.Uri.joinPath(base, BINARY_ROOT_DIR);
 	}
 
 	private dirForVersion(version: string): vscode.Uri {
@@ -98,9 +99,7 @@ export class Downloader {
 
 	private async findLatestDownloadableGithubRelease(): Promise<ParsedRelease> {
 		const response = await fetch(
-			"https://api.github.com/repos/" +
-				`${this.githubUser}/${this.githubRepo}` +
-				"/releases/latest",
+			`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`,
 		);
 
 		const data = (await response.json()) as GithubRelease;

@@ -12,6 +12,7 @@ import {
 
 import { getExtensionContext } from "./extension";
 import { Downloader } from "./downloader";
+import { BINARY_NAME, DISPLAY_NAME } from "./constants";
 
 let client: LanguageClient | undefined;
 let outputChannel: vscode.OutputChannel;
@@ -30,19 +31,14 @@ export const startServer = async () => {
 
 	// Check if we have the server binary on PATH, download it if not
 
-	let resolved = await which("zap-language-server", { nothrow: true });
+	let resolved = await which(BINARY_NAME, { nothrow: true });
 	if (!resolved) {
-		const downloader = new Downloader(
-			context,
-			"filiptibell",
-			"zap-language-server",
-			"zap-language-server",
-		);
+		const downloader = new Downloader(context);
 
 		await vscode.window.withProgress(
 			{
 				location: vscode.ProgressLocation.Window,
-				title: "Downloading Zap Language Server...",
+				title: `Downloading ${DISPLAY_NAME}...`,
 			},
 			async () => {
 				await downloader.download();
@@ -55,9 +51,7 @@ export const startServer = async () => {
 	// Create persistent output channel if one does not exist
 
 	if (outputChannel === undefined) {
-		outputChannel = vscode.window.createOutputChannel(
-			"Zap Language Server",
-		);
+		outputChannel = vscode.window.createOutputChannel(DISPLAY_NAME);
 	}
 
 	// Create args for language server
@@ -86,8 +80,8 @@ export const startServer = async () => {
 	outputChannel.appendLine("Starting language server");
 
 	client = new LanguageClient(
-		"zap-language-server",
-		"Zap Language Server",
+		BINARY_NAME,
+		DISPLAY_NAME,
 		serverOptions,
 		clientOptions,
 	);
