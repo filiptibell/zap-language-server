@@ -3,6 +3,8 @@ import * as vscode from "vscode";
 import * as os from "os";
 import JSZip from "jszip";
 
+// Types
+
 type GithubReleaseAsset = {
 	name: string;
 	browser_download_url: string;
@@ -17,6 +19,8 @@ type ParsedRelease = {
 	version: string;
 	downloadUrl: string;
 };
+
+// System helpers
 
 function systemOs(): string {
 	switch (os.platform()) {
@@ -41,6 +45,8 @@ function systemArch(): string {
 			throw new Error(`Unsupported architecture: ${os.arch()}`);
 	}
 }
+
+// Downloader class
 
 export class Downloader {
 	private latestVersion: string | null = null;
@@ -92,7 +98,9 @@ export class Downloader {
 
 	private async findLatestDownloadableGithubRelease(): Promise<ParsedRelease> {
 		const response = await fetch(
-			`https://api.github.com/repos/${this.githubUser}/${this.githubRepo}/releases/latest`,
+			"https://api.github.com/repos/" +
+				`${this.githubUser}/${this.githubRepo}` +
+				"/releases/latest",
 		);
 
 		const data = (await response.json()) as GithubRelease;
