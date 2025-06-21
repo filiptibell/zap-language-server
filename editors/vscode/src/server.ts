@@ -2,6 +2,7 @@
 
 import * as vscode from "vscode";
 import * as os from "os";
+import which from "which";
 
 import {
 	Executable,
@@ -28,6 +29,13 @@ export const startServer = async () => {
 
 	const context = getExtensionContext();
 
+	// Check if we have zap-language-server available on PATH
+
+	const resolved = await which("zap-language-server", { nothrow: true });
+	if (!resolved) {
+		throw new Error("zap-language-server not found on PATH");
+	}
+
 	// Create persistent output channel if one does not exist
 
 	if (outputChannel === undefined) {
@@ -39,7 +47,7 @@ export const startServer = async () => {
 	// Create args for language server
 
 	const server: Executable = {
-		command: "zap-language-server",
+		command: resolved,
 		options: { env: { PATH: process.env.PATH } },
 		args: ["serve"],
 	};
