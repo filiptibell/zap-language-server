@@ -1,3 +1,20 @@
+<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-disable MD041 -->
+
+<div align="center">
+  <a href="https://github.com/filiptibell/zap-language/actions">
+  <img src="https://shields.io/endpoint?url=https://badges.readysetplay.io/workflow/filiptibell/zap-language/ci.yaml" alt="CI status" />
+  </a>
+  <a href="https://github.com/filiptibell/zap-language/actions">
+    <img src="https://shields.io/endpoint?url=https://badges.readysetplay.io/workflow/filiptibell/zap-language/release.yaml" alt="Release status" />
+  </a>
+  <a href="https://github.com/filiptibell/zap-language/blob/main/LICENSE.txt">
+    <img src="https://img.shields.io/github/license/filiptibell/zap-language.svg?label=License&color=informational" alt="License" />
+  </a>
+</div>
+
+<br/>
+
 # Zap Language Server
 
 Full editor support for [Zap](https://zap.redblox.dev), providing syntax highlighting, indentation, and code folding.
