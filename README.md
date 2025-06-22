@@ -26,15 +26,9 @@ Also supports the following features using the [LSP](https://microsoft.github.io
 - 🎯 Go to definition & renaming for user-defined types
 - 📝 Full document auto-formatting
 
-## Language Server
+## Installation
 
-The language server can be installed from the [latest release](https://github.com/filiptibell/zap-language-server/releases/latest) using something like [Rokit](https://github.com/rojo-rbx/rokit):
-
-```bash
-rokit add filiptibell/zap-language-server
-```
-
-Extensions for VSCode and Zed also exist - but installing them is currently a manual process.
+Extensions for VSCode and Zed exist - but installing them is currently a manual process.
 
 When the extensions are feature-complete they will be published to the VSCode and Zed extension stores.
 
@@ -65,7 +59,13 @@ When the extensions are feature-complete they will be published to the VSCode an
 
 The language server can also be used as a standalone tool, and includes a CLI for formatting Zap files.
 
-Once installed (see instructions above), the CLI is very similar to [StyLua](https://github.com/JohnnyMorganz/StyLua) and/or [prettier](https://prettier.io/).
+It can be installed from the [latest release](https://github.com/filiptibell/zap-language-server/releases/latest) using something like [Rokit](https://github.com/rojo-rbx/rokit):
+
+```bash
+rokit add filiptibell/zap-language-server
+```
+
+Once installed, the CLI is very similar to [StyLua](https://github.com/JohnnyMorganz/StyLua) and/or [prettier](https://prettier.io/).
 The formatter is intentionally opinionated and does not have any configuration.
 
 ### Formatter
