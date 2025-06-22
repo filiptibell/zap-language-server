@@ -3,13 +3,13 @@ use zed_extension_api::{self as zed};
 use crate::constants::{BINARY_NAME, BINARY_ROOT_DIR};
 
 #[derive(Debug, Clone, Copy)]
-pub struct PlatformStrings {
+pub struct PlatformDescriptor {
     os: &'static str,
     arch: &'static str,
     exe_suffix: &'static str,
 }
 
-impl PlatformStrings {
+impl PlatformDescriptor {
     pub fn current() -> Self {
         let (platform, arch) = zed::current_platform();
 

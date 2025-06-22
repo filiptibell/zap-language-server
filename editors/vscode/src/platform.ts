@@ -38,7 +38,7 @@ function constructExeSuffix(): string {
 
 // Strings class
 
-export class PlatformStrings {
+export class PlatformDescriptor {
 	private readonly os: OS;
 	private readonly arch: Arch;
 	private readonly exeSuffix: string;

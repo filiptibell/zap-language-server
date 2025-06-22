@@ -1,8 +1,8 @@
 use zed_extension_api::{self as zed, Result};
 
-use crate::{constants::GITHUB_REPO, strings::PlatformStrings};
+use crate::{constants::GITHUB_REPO, platform::PlatformDescriptor};
 
-pub fn find_latest_release(pstrings: &PlatformStrings) -> Result<(String, String)> {
+pub fn find_latest_release(pdesc: &PlatformDescriptor) -> Result<(String, String)> {
     let release = zed::latest_github_release(
         GITHUB_REPO,
         zed::GithubReleaseOptions {
@@ -13,7 +13,7 @@ pub fn find_latest_release(pstrings: &PlatformStrings) -> Result<(String, String
 
     let release_version = release.version.trim().trim_start_matches('v');
 
-    let asset_name = pstrings.release_asset_name(release_version);
+    let asset_name = pdesc.release_asset_name(release_version);
     let asset_found = release
         .assets
         .iter()

@@ -5,11 +5,11 @@ use zed_extension_api::{self as zed, LanguageServerId, Result};
 mod constants;
 mod fs;
 mod github;
-mod strings;
+mod platform;
 
 use self::constants::BINARY_NAME;
 use self::fs::{cleanup_dir_entries, create_dir_if_nonexistent, file_exists};
-use self::strings::PlatformStrings;
+use self::platform::PlatformDescriptor;
 
 struct ZapExtension {
     cached_binary_path: Option<String>,
@@ -36,15 +36,15 @@ impl ZapExtension {
             &zed::LanguageServerInstallationStatus::CheckingForUpdate,
         );
 
-        let pstrings = PlatformStrings::current();
-        let (release_version, release_download_url) = github::find_latest_release(&pstrings)?;
+        let pdesc = PlatformDescriptor::current();
+        let (release_version, release_download_url) = github::find_latest_release(&pdesc)?;
 
         // Latest released binary was found, check if that's a version we have downloaded already
 
-        let root_dir = pstrings.server_binary_root();
-        let version_dir_name = pstrings.server_binary_dir(&release_version);
+        let root_dir = pdesc.server_binary_root();
+        let version_dir_name = pdesc.server_binary_dir(&release_version);
         let version_dir_path = format!("{root_dir}/{version_dir_name}");
-        let binary_path = format!("{version_dir_path}/{}", pstrings.server_binary_path());
+        let binary_path = format!("{version_dir_path}/{}", pdesc.server_binary_path());
 
         if !file_exists(&binary_path) {
             // We don't have the latest binary, download it and get rid of old binaries

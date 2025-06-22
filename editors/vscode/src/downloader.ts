@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 import JSZip from "jszip";
 
 import { GITHUB_REPO } from "./constants";
-import { PlatformStrings } from "./strings";
+import { PlatformDescriptor } from "./platform";
 
 // Types
 
@@ -28,13 +28,13 @@ export class Downloader {
 	private latestVersion: string | null = null;
 	private latestDownloaded: boolean = false;
 
-	private readonly strings: PlatformStrings;
+	private readonly pdesc: PlatformDescriptor;
 
 	constructor(
 		private readonly context: vscode.ExtensionContext,
 		private readonly outputChannel: vscode.OutputChannel,
 	) {
-		this.strings = new PlatformStrings();
+		this.pdesc = new PlatformDescriptor();
 	}
 
 	// Private
@@ -42,21 +42,21 @@ export class Downloader {
 	private dirForVersions(): vscode.Uri {
 		return vscode.Uri.joinPath(
 			this.context.extensionUri,
-			this.strings.serverBinaryRoot(),
+			this.pdesc.serverBinaryRoot(),
 		);
 	}
 
 	private dirForVersion(version: string): vscode.Uri {
 		return vscode.Uri.joinPath(
 			this.dirForVersions(),
-			this.strings.serverBinaryDir(version),
+			this.pdesc.serverBinaryDir(version),
 		);
 	}
 
 	private fileForVersion(version: string): vscode.Uri {
 		return vscode.Uri.joinPath(
 			this.dirForVersion(version),
-			this.strings.serverBinaryPath(),
+			this.pdesc.serverBinaryPath(),
 		);
 	}
 
@@ -94,7 +94,7 @@ export class Downloader {
 
 		const data = (await response.json()) as GithubRelease;
 		const version = data.tag_name;
-		const name = this.strings.releaseAssetName(version);
+		const name = this.pdesc.releaseAssetName(version);
 
 		let downloadUrl: string | null = null;
 		for (const asset of data.assets) {
@@ -125,7 +125,7 @@ export class Downloader {
 		const zipBytes = await response.arrayBuffer();
 		const zipFile = await JSZip.loadAsync(zipBytes);
 
-		const fileName = this.strings.serverBinaryPath();
+		const fileName = this.pdesc.serverBinaryPath();
 		for (const relativePath in zipFile.files) {
 			const entry = zipFile.files[relativePath];
 			if (entry.name === fileName) {
@@ -194,7 +194,7 @@ export class Downloader {
 
 		// 3b. Make the binary executable on Unix systems, note
 		//     that the VSCODE fs API doesn't support chmod
-		if (this.strings.isUnix()) {
+		if (this.pdesc.isUnix()) {
 			this.outputChannel.appendLine("Making binary executable");
 			await fs.chmod(file.fsPath, 0o755);
 		}
