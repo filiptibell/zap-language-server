@@ -28,9 +28,12 @@ Also supports the following features using the [LSP](https://microsoft.github.io
 
 ## Installation
 
-Extensions for VSCode and Zed exist - but installing them is currently a manual process.
+Zap Language Server can be installed as an extension from:
 
-When the extensions are feature-complete they will be published to the VSCode and Zed extension stores.
+- The [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=filiptibell.zap-language-server) (VSCode)
+- The [Open VSX Registry](https://open-vsx.org/extension/filiptibell/zap-language-server) (Cursor, Windsurf, ...)
+
+Extensions can also be built and installed from source:
 
 <details>
 <summary> Manual Installation - VSCode </summary>
