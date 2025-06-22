@@ -32,6 +32,7 @@ Zap Language Server can be installed as an extension from:
 
 - The [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=filiptibell.zap-language-server) (VSCode)
 - The [Open VSX Registry](https://open-vsx.org/extension/filiptibell/zap-language-server) (Cursor, Windsurf, ...)
+- The [Zed Extensions](https://zed.dev/extensions) registry
 
 Extensions can also be built and installed from source:
 
