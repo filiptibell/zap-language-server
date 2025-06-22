@@ -10,7 +10,7 @@ import {
 	ServerOptions,
 } from "vscode-languageclient/node";
 
-import { getExtensionContext } from "./extension";
+import { getExtensionContext } from "../extension";
 import { Downloader } from "./downloader";
 import { BINARY_NAME, DISPLAY_NAME } from "./constants";
 
@@ -22,7 +22,7 @@ let outputChannel: vscode.OutputChannel;
 
 	Will throw an error if the language server has already been started.
 */
-export const startServer = async () => {
+export const start = async () => {
 	if (client !== undefined) {
 		throw new Error("Language server has already been started");
 	}
@@ -94,7 +94,7 @@ export const startServer = async () => {
 
 	Returns `true` if stopped, `false` if the language server was not running.
 */
-export const stopServer = async (): Promise<boolean> => {
+export const stop = async (): Promise<boolean> => {
 	const c = client;
 	if (c !== undefined) {
 		client = undefined;
@@ -111,7 +111,7 @@ export const stopServer = async (): Promise<boolean> => {
 	Should be used only when a language server configuration that requires a full
 	restart is needed, other methods such as notifications should be preferred.
 */
-export const restartServer = async () => {
-	await stopServer();
-	await startServer();
+export const restart = async () => {
+	await stop();
+	await start();
 };

@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-import * as client from "./server";
+import * as server from "./server";
 
 let context: vscode.ExtensionContext;
 
@@ -15,9 +15,9 @@ export function getExtensionContext(): vscode.ExtensionContext {
 export async function activate(ctx: vscode.ExtensionContext) {
 	context = ctx;
 
-	await client.startServer();
+	await server.start();
 }
 
 export async function deactivate() {
-	await client.stopServer();
+	await server.stop();
 }
