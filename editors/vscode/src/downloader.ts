@@ -30,7 +30,10 @@ export class Downloader {
 
 	private readonly strings: PlatformStrings;
 
-	constructor(private readonly context: vscode.ExtensionContext) {
+	constructor(
+		private readonly context: vscode.ExtensionContext,
+		private readonly outputChannel: vscode.OutputChannel,
+	) {
 		this.strings = new PlatformStrings();
 	}
 
@@ -57,16 +60,26 @@ export class Downloader {
 		);
 	}
 
-	private async cleanupAllVersionsExcept(version: string): Promise<void> {
-		const vdir = this.dirForVersions();
+	private async cleanupAllVersionsExcept(
+		versionUri: vscode.Uri,
+	): Promise<void> {
+		const versionsDir = this.dirForVersions();
 		try {
-			const entries = await vscode.workspace.fs.readDirectory(vdir);
+			const entries =
+				await vscode.workspace.fs.readDirectory(versionsDir);
 			for (const [name, type] of entries) {
-				if (type === vscode.FileType.Directory && name !== version) {
-					await vscode.workspace.fs.delete(
-						vscode.Uri.joinPath(vdir, name),
-						{ recursive: true, useTrash: false },
+				const uri = vscode.Uri.joinPath(versionsDir, name);
+				if (uri.toString() === versionUri.toString()) {
+					continue;
+				}
+				if (type === vscode.FileType.Directory) {
+					this.outputChannel.appendLine(
+						`Cleaning up old version (${name})`,
 					);
+					await vscode.workspace.fs.delete(uri, {
+						recursive: true,
+						useTrash: false,
+					});
 				}
 			}
 		} catch {
@@ -134,29 +147,55 @@ export class Downloader {
 		}
 
 		// 1a. Find the latest downloadable GitHub release
+		this.outputChannel.appendLine(
+			"Finding latest downloadable GitHub release",
+		);
 		const latest = await this.findLatestDownloadableGithubRelease();
+		const dir = this.dirForVersion(latest.version);
+		const file = this.fileForVersion(latest.version);
 
-		// 1b. Skip download if the latest version is already downloaded
+		// 1b. Skip download if the latest version is already downloaded,
+		//     making sure to verify that the binary actually exists in
+		//     case the binaries directory has been modified somehow
 		const existing =
 			this.context.globalState.get<string>("downloadedVersion");
 		if (existing === latest.version) {
-			this.latestVersion = latest.version;
-			this.latestDownloaded = true;
-			return;
+			let dirStats;
+			let fileStats;
+			try {
+				dirStats = await vscode.workspace.fs.stat(dir);
+				fileStats = await vscode.workspace.fs.stat(file);
+				if (
+					dirStats.type === vscode.FileType.Directory &&
+					fileStats.type === vscode.FileType.File
+				) {
+					this.outputChannel.appendLine(
+						`Downloaded binary is up to date (${latest.version})`,
+					);
+					this.latestVersion = latest.version;
+					this.latestDownloaded = true;
+					return;
+				} else {
+					throw new Error("Oh no, we need to redownload");
+				}
+			} catch (_) {}
 		}
 
 		// 2. Download the latest version & extract the raw binary from the zip
+		this.outputChannel.appendLine(
+			`Downloading binary for version ${latest.version}`,
+		);
 		const binary = await this.downloadAndExtractGithubReleaseAsset(latest);
 
 		// 3a. Write the binary to disk at the correct location
-		const dir = this.dirForVersion(latest.version);
-		const file = this.fileForVersion(latest.version);
+		this.outputChannel.appendLine(`Writing binary to ${file.fsPath}`);
 		await vscode.workspace.fs.createDirectory(dir);
 		await vscode.workspace.fs.writeFile(file, new Uint8Array(binary));
 
 		// 3b. Make the binary executable on Unix systems, note
 		//     that the VSCODE fs API doesn't support chmod
 		if (this.strings.isUnix()) {
+			this.outputChannel.appendLine("Making binary executable");
 			await fs.chmod(file.fsPath, 0o755);
 		}
 
@@ -166,7 +205,7 @@ export class Downloader {
 		this.context.globalState.update("downloadedVersion", latest.version);
 
 		// 5. Finally, remove old versions that are no longer necessary (if any)
-		this.cleanupAllVersionsExcept(latest.version);
+		await this.cleanupAllVersionsExcept(dir);
 	}
 
 	public path(): string {

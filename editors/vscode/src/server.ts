@@ -29,11 +29,17 @@ export const startServer = async () => {
 
 	const context = getExtensionContext();
 
+	// Create persistent output channel if one does not exist
+
+	if (outputChannel === undefined) {
+		outputChannel = vscode.window.createOutputChannel(DISPLAY_NAME);
+	}
+
 	// Check if we have the server binary on PATH, download it if not
 
 	let resolved = await which(BINARY_NAME, { nothrow: true });
 	if (!resolved) {
-		const downloader = new Downloader(context);
+		const downloader = new Downloader(context, outputChannel);
 
 		await vscode.window.withProgress(
 			{
@@ -46,12 +52,6 @@ export const startServer = async () => {
 		);
 
 		resolved = downloader.path();
-	}
-
-	// Create persistent output channel if one does not exist
-
-	if (outputChannel === undefined) {
-		outputChannel = vscode.window.createOutputChannel(DISPLAY_NAME);
 	}
 
 	// Create args for language server
