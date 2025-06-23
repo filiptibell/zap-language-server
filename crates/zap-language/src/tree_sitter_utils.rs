@@ -20,7 +20,11 @@ pub fn is_comment_node(node: Node) -> bool {
 pub fn is_declaration_node(node: Node) -> bool {
     matches!(
         node.kind(),
-        "option_declaration" | "type_declaration" | "event_declaration" | "function_declaration"
+        "option_declaration"
+            | "type_declaration"
+            | "event_declaration"
+            | "function_declaration"
+            | "namespace_declaration"
     )
 }
 
@@ -29,6 +33,7 @@ pub fn is_type_node(node: Node) -> bool {
     matches!(
         node.kind(),
         "type"
+            | "namespaced_type"
             | "primitive_type"
             | "optional_type"
             | "struct_type"

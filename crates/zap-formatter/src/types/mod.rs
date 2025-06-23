@@ -32,6 +32,7 @@ pub(crate) fn format_type(writer: &mut impl fmt::Write, state: &mut State, node:
             format_array(writer, state, node)
         }
 
+        "namespaced_type" => format_namespaced(writer, state, node),
         "optional_type" => format_optional(writer, state, node),
         "struct_type" => format_struct(writer, state, node),
         "enum_type" => format_enum(writer, state, node),
@@ -49,6 +50,21 @@ pub(crate) fn format_type(writer: &mut impl fmt::Write, state: &mut State, node:
 
         _ => Ok(()),
     }
+}
+
+fn format_namespaced(writer: &mut impl fmt::Write, state: &mut State, node: Node) -> Result {
+    let mut cursor = node.walk();
+    for namespace in node.children_by_field_name("namespace", &mut cursor) {
+        format_node(writer, state, namespace)?;
+        write!(writer, ".")?;
+    }
+
+    let typ = node
+        .child_by_field_name("type")
+        .expect("valid namespaced type");
+    format_type(writer, state, typ)?;
+
+    Ok(())
 }
 
 fn format_optional(writer: &mut impl fmt::Write, state: &mut State, node: Node) -> Result {

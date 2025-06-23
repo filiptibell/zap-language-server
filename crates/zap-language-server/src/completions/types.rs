@@ -9,9 +9,9 @@ use zap_language::docs::get_primitive_names;
 use crate::utils::{gather_declared_types, is_type};
 
 pub fn completion(doc: &Document, pos: Position, node: Node) -> Vec<(CompletionItemKind, String)> {
-    // If our current node is the top-level "source file" we can
-    // probably drill down to something a bit more specific & useful
-    let node = if node.kind() == "source_file" {
+    // If our current node is a top-level "source file" or "namespace_declaration"
+    // we can probably drill down to something a bit more specific & useful
+    let node = if matches!(node.kind(), "source_file" | "namespace_declaration") {
         find_child(node, |c| {
             ts_range_contains_lsp_position(c.range(), pos) && c.kind() == "type_declaration"
         })

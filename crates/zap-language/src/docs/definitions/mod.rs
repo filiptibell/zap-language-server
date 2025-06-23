@@ -20,13 +20,14 @@ pub static INSTANCE_CLASS_NAMES: LazyLock<&'static [&'static str]> = LazyLock::n
 
 #[rustfmt::skip]
 pub const KEYWORD_DEFINITIONS: &[(&str, &str, &str)] = &[
-	("event",  "Events",    self::keywords::KEYWORD_EVENT_DESCRIPTION),
-	("funct",  "Functions", self::keywords::KEYWORD_FUNCT_DESCRIPTION),
-	("type",   "Types",     self::keywords::KEYWORD_TYPE_DESCRIPTION),
-	("struct", "Structs",   self::keywords::KEYWORD_STRUCT_DESCRIPTION),
-	("enum",   "Enums",     self::keywords::KEYWORD_ENUM_DESCRIPTION),
-	("map",    "Maps",      self::keywords::KEYWORD_MAP_DESCRIPTION),
-	("set",    "Sets",      self::keywords::KEYWORD_SET_DESCRIPTION),
+	("event",     "Events",     self::keywords::KEYWORD_EVENT_DESCRIPTION),
+	("funct",     "Functions",  self::keywords::KEYWORD_FUNCT_DESCRIPTION),
+	("type",      "Types",      self::keywords::KEYWORD_TYPE_DESCRIPTION),
+	("struct",    "Structs",    self::keywords::KEYWORD_STRUCT_DESCRIPTION),
+	("enum",      "Enums",      self::keywords::KEYWORD_ENUM_DESCRIPTION),
+	("map",       "Maps",       self::keywords::KEYWORD_MAP_DESCRIPTION),
+	("set",       "Sets",       self::keywords::KEYWORD_SET_DESCRIPTION),
+	("namespace", "Namespaces", self::keywords::KEYWORD_NAMESPACE_DESCRIPTION),
 ];
 
 #[rustfmt::skip]

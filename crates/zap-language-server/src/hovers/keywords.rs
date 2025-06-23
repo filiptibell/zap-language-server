@@ -18,6 +18,7 @@ pub fn hover(doc: &Document, pos: Position, node: Node) -> Option<Hover> {
         "type_declaration"
             | "event_declaration"
             | "function_declaration"
+            | "namespace_declaration"
             | "map_type"
             | "set_type"
             | "struct_type"
