@@ -8,6 +8,7 @@
   "enum"
   "set"
   "map"
+  "namespace"
 ] @keyword
 
 ; Operators
@@ -27,6 +28,7 @@
 [
   ":"
   ","
+  "."
   ".."
 ] @punctuation.delimiter
 
@@ -74,6 +76,9 @@
 (function_declaration
   name: (identifier) @function)
 
+(namespace_declaration
+  name: (identifier) @namespace)
+
 (enum_variant
   (identifier) @enum.variant)
 
@@ -113,6 +118,9 @@
 (array
   (array_inexact) @operator)
 
-; Optional types
+; Type modifiers
 (optional_type
   "?" @operator)
+
+(namespaced_type
+  namespace: (identifier) @namespace)

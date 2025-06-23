@@ -4,6 +4,7 @@
   (enum_type)
   (event_declaration)
   (function_declaration)
+  (namespace_declaration)
 ] @fold
 
 ; Allow folding of comma-separated lists that may span multiple lines

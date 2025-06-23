@@ -5,9 +5,10 @@
 (enum_type "{" "}" @end) @indent
 (enum_variant "{" "}" @end) @indent
 
-; Event/Function indentation
+; Declarations indentation
 (event_declaration "{" "}" @end) @indent
 (function_declaration "{" "}" @end) @indent
+(namespace_declaration "{" "}" @end) @indent
 
 ; General bracket indentation
 (_ "[" "]" @end) @indent

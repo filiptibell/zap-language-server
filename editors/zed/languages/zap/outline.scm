@@ -10,4 +10,8 @@
   "funct" @context
   name: (identifier) @name) @item
 
+(namespace_declaration
+  "namespace" @context
+  name: (identifier) @name) @item
+
 (doc_comment) @annotation
