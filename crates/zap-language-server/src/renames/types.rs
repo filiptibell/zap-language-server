@@ -36,7 +36,7 @@ pub fn prepare(_doc: &Document, pos: Position, node: Node) -> Option<PrepareRena
     None
 }
 
-pub fn rename(doc: &Document, _pos: Position, node: Node, new_name: &str) -> Option<WorkspaceEdit> {
+pub fn rename(doc: &Document, pos: Position, node: Node, new_name: &str) -> Option<WorkspaceEdit> {
     // 1. Transform the identifier node we are possibly on, into the
     //    full node for the declaration / reference, when possible
     let node = match node.parent() {
@@ -44,11 +44,24 @@ pub fn rename(doc: &Document, _pos: Position, node: Node, new_name: &str) -> Opt
         _ => node,
     };
 
-    // 2. Find the type declaration and all type references to it
+    // 2. Find the type declaration and all type references to it,
+    //    also making sure that our position is over an identifier
     let declaration = match DeclaredType::from_node(node) {
-        Some(decl) => decl,
+        Some(decl) => {
+            if ts_range_contains_lsp_position(decl.identifier_range(), pos) {
+                decl
+            } else {
+                return None;
+            }
+        }
         None => match ReferencedType::from_node(node) {
-            Some(typ) => typ.resolve_declaration(doc)?,
+            Some(typ) => {
+                if ts_range_contains_lsp_position(typ.identifier_range(), pos) {
+                    typ.resolve_declaration(doc)?
+                } else {
+                    return None;
+                }
+            }
             None => return None,
         },
     };

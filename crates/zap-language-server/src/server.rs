@@ -16,10 +16,13 @@ use crate::{
         completion_for_instances, completion_for_keywords, completion_for_options,
         completion_for_properties, completion_for_types, completion_trigger_characters,
     },
-    definitions::definition_for_types,
+    definitions::{definition_for_namespaces, definition_for_types},
     hovers::{hover_for_keywords, hover_for_options, hover_for_properties, hover_for_types},
-    references::references_for_types,
-    renames::{rename_for_types, rename_prepare_for_types},
+    references::{references_for_namespaces, references_for_types},
+    renames::{
+        rename_for_namespaces, rename_for_types, rename_prepare_for_namespaces,
+        rename_prepare_for_types,
+    },
 };
 
 #[derive(Debug, Clone)]
@@ -160,7 +163,8 @@ impl Server for ZapLanguageServer {
             return Ok(None);
         };
 
-        Ok(rename_prepare_for_types(&doc, pos, node))
+        Ok(rename_prepare_for_namespaces(&doc, pos, node)
+            .or_else(|| rename_prepare_for_types(&doc, pos, node)))
     }
 
     async fn rename(
@@ -179,7 +183,10 @@ impl Server for ZapLanguageServer {
             return Ok(None);
         };
 
-        Ok(rename_for_types(&doc, pos, node, params.new_name.as_str()))
+        Ok(
+            rename_for_namespaces(&doc, pos, node, params.new_name.as_str())
+                .or_else(|| rename_for_types(&doc, pos, node, params.new_name.as_str())),
+        )
     }
 
     async fn definition(
@@ -212,7 +219,8 @@ impl Server for ZapLanguageServer {
             pos.character
         );
 
-        Ok(definition_for_types(&doc, pos, node))
+        Ok(definition_for_namespaces(&doc, pos, node)
+            .or_else(|| definition_for_types(&doc, pos, node)))
     }
 
     async fn references(
@@ -241,7 +249,8 @@ impl Server for ZapLanguageServer {
             pos.character
         );
 
-        Ok(references_for_types(&doc, pos, node))
+        Ok(references_for_namespaces(&doc, pos, node)
+            .or_else(|| references_for_types(&doc, pos, node)))
     }
 
     async fn document_format(
