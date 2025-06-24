@@ -85,7 +85,7 @@ checksum = "e16d2d3311acee920a9eb8d33b8cbc1787ce4a264e85f964c2404b969bdcd487"
 [[package]]
 name = "async-language-server"
 version = "0.0.0"
-source = "git+https://github.com/filiptibell/async-language-server?rev=80ce3afcd3e0914fa5c6fff55d4d253e167ff561#80ce3afcd3e0914fa5c6fff55d4d253e167ff561"
+source = "git+https://github.com/filiptibell/async-language-server?rev=a0ab43be5d01b9eade82393431ac7adf0ec51d8e#a0ab43be5d01b9eade82393431ac7adf0ec51d8e"
 dependencies = [
  "async-lsp",
  "dashmap",

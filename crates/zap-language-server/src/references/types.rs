@@ -5,30 +5,33 @@ use async_language_server::{
     tree_sitter_utils::ts_range_to_lsp_range,
 };
 
-use crate::utils::{gather_type_references, is_declared_type, is_type_reference};
+use crate::structs::{DeclaredType, ReferencedType};
 
 pub fn references(doc: &Document, _pos: Position, node: Node) -> Option<Vec<Location>> {
-    if !is_declared_type(node) && !is_type_reference(node) {
-        return None;
-    }
+    // 1. Transform the identifier node we are possibly on, into the
+    //    full node for the declaration / reference, when possible
+    let node = match node.parent() {
+        Some(p) if matches!(p.kind(), "type_declaration" | "namespaced_type") => p,
+        _ => node,
+    };
 
-    let type_name = doc.text().byte_slice(node.byte_range()).to_string();
-    tracing::info!("Finding references for type '{type_name}'");
+    // 2. Resolve the type declaration
+    let declaration = match DeclaredType::from_node(doc, node) {
+        Some(decl) => decl,
+        None => match ReferencedType::from_node(doc, node) {
+            Some(typ) => typ.resolve_declaration()?,
+            None => return None,
+        },
+    };
 
-    let type_references = gather_type_references(doc.node_at_root()?)
-        .into_iter()
-        .filter(|type_reference| {
-            let type_str = doc.text().byte_slice(type_reference.byte_range());
-            type_str
-                .as_str()
-                .is_some_and(|s| s.trim() == type_name.as_str())
-        });
-
+    // 3. We have a definite declaration, so we can resolve references
     let url = doc.url().clone();
-    let locations = type_references
-        .map(|node| Location {
+    let locations = declaration
+        .resolve_references()
+        .into_iter()
+        .map(|typ| Location {
             uri: url.clone(),
-            range: ts_range_to_lsp_range(node.range()),
+            range: ts_range_to_lsp_range(typ.identifier_range()),
         })
         .collect();
 

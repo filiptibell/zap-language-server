@@ -18,6 +18,25 @@ pub use self::config::{Config, Indentation};
 pub use self::result::{Error, Result};
 
 /**
+    Formats a single node given a `config` and a tree-sitter `root` node.
+
+    This has slightly different behavior compared to `format_document` in terms of
+    whitespace and newlines - prefer `format_document` for full document formatting.
+
+    Designed to be used for temporary formatting, such as in type hovers.
+
+    # Errors
+
+    - If the given document tree contains any error node
+    - If the formatter encounters an internal error / bug
+*/
+pub fn format_root(writer: &mut impl fmt::Write, config: Config, root: Node) -> Result {
+    let mut state = State::new(config, 0);
+    format_node(writer, &mut state, root)?;
+    Ok(())
+}
+
+/**
     Formats a Zap document given a `config` and a tree-sitter `root` node.
 
     # Errors

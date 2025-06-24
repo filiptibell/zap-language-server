@@ -12,8 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added support for renaming user-defined types
-- Added support for finding all references for user-defined types
+- Added basic support for namespaces
+- Added full support for renaming user-defined types
+- Added full support for go-to definition for user-defined types
+- Added full support for finding all references for user-defined types
 
 ## `0.1.0` - May 23rd, 2025
 

@@ -2,11 +2,13 @@ use async_language_server::{
     lsp_types::{CompletionItemKind, Position},
     server::Document,
     tree_sitter::Node,
-    tree_sitter_utils::{find_child, find_descendant, ts_range_contains_lsp_position},
+    tree_sitter_utils::{
+        find_ancestor, find_child, find_descendant, ts_range_contains_lsp_position,
+    },
 };
 use zap_language::docs::get_primitive_names;
 
-use crate::utils::{gather_declared_types, is_type};
+use crate::{structs::DeclaredType, utils::is_type};
 
 pub fn completion(doc: &Document, pos: Position, node: Node) -> Vec<(CompletionItemKind, String)> {
     // If our current node is a top-level "source file" or "namespace_declaration"
@@ -39,10 +41,17 @@ pub fn completion(doc: &Document, pos: Position, node: Node) -> Vec<(CompletionI
             get_primitive_names().map(|prim| (CompletionItemKind::CLASS, prim.to_string())),
         );
 
+        let Some(nearest_namespace) = find_ancestor(node, |ancestor| {
+            matches!(ancestor.kind(), "source_file" | "namespace_declaration")
+        }) else {
+            return items;
+        };
+
         items.extend(
-            gather_declared_types(doc)
-                .into_keys()
-                .map(|name| (CompletionItemKind::VARIABLE, name)),
+            DeclaredType::find_all_in(doc, nearest_namespace)
+                .into_iter()
+                .filter(|decl| decl.is_in_namespace(nearest_namespace))
+                .map(|decl| (CompletionItemKind::VARIABLE, decl.identifier_text())),
         );
     }
 

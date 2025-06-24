@@ -5,18 +5,22 @@ use async_language_server::{
     tree_sitter_utils::ts_range_to_lsp_range,
 };
 
-use crate::utils::{find_declared_type, is_type_reference};
+use crate::structs::ReferencedType;
 
 pub fn definition(doc: &Document, _pos: Position, node: Node) -> Option<GotoDefinitionResponse> {
-    if is_type_reference(node) {
-        let type_name = doc.text().byte_slice(node.byte_range());
-        let type_decl = find_declared_type(doc, type_name)?;
+    // May be a referenced type that needs to be resolved,
+    // if we are selecting a qualified / namespaced type we
+    // should also make sure to resolve the *full* reference
+    let node = match node.parent() {
+        Some(p) if p.kind() == "namespaced_type" => p,
+        _ => node,
+    };
 
-        return Some(GotoDefinitionResponse::Scalar(Location {
-            uri: doc.url().clone(),
-            range: ts_range_to_lsp_range(type_decl.range()),
-        }));
-    }
+    let typ = ReferencedType::from_node(doc, node)?;
+    let decl = typ.resolve_declaration()?;
 
-    None
+    Some(GotoDefinitionResponse::Scalar(Location {
+        uri: doc.url().clone(),
+        range: ts_range_to_lsp_range(decl.identifier_range()),
+    }))
 }

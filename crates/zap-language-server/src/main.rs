@@ -5,6 +5,7 @@ mod hovers;
 mod references;
 mod renames;
 mod server;
+mod structs;
 mod tracing;
 mod utils;
 
