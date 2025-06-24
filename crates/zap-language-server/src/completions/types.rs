@@ -28,6 +28,12 @@ pub fn completion(doc: &Document, pos: Position, node: Node) -> Vec<(CompletionI
     })
     .unwrap_or(node);
 
+    // If we are in a namespaced type, the only valid completions
+    // are handled in the namespace completion function
+    if node.parent().is_some_and(|p| p.kind() == "namespaced_type") {
+        return Vec::new();
+    }
+
     let mut items = Vec::new();
 
     if is_type(node) {
