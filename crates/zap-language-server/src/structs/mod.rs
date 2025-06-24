@@ -1,9 +1,9 @@
 #![allow(dead_code)]
 
+use zap_language::tree_sitter::Node;
+
 mod declared_type;
 mod referenced_type;
-
-use zap_language::tree_sitter::Node;
 
 pub use self::declared_type::DeclaredType;
 pub use self::referenced_type::ReferencedType;
