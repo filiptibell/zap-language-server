@@ -9,9 +9,9 @@ use async_language_server::{
 
 use crate::structs::{DeclaredType, ReferencedType};
 
-pub fn prepare(doc: &Document, pos: Position, node: Node) -> Option<PrepareRenameResponse> {
+pub fn prepare(_doc: &Document, pos: Position, node: Node) -> Option<PrepareRenameResponse> {
     // 1. Check if we are renaming the identifier part of a declaration
-    if let Some(decl) = node.parent().and_then(|p| DeclaredType::from_node(doc, p)) {
+    if let Some(decl) = node.parent().and_then(DeclaredType::from_node) {
         if ts_range_contains_lsp_position(decl.identifier_range(), pos) {
             return Some(PrepareRenameResponse::Range(ts_range_to_lsp_range(
                 decl.identifier_range(),
@@ -25,7 +25,7 @@ pub fn prepare(doc: &Document, pos: Position, node: Node) -> Option<PrepareRenam
     } else {
         node
     };
-    if let Some(typ) = ReferencedType::from_node(doc, node) {
+    if let Some(typ) = ReferencedType::from_node(node) {
         if ts_range_contains_lsp_position(typ.identifier_range(), pos) {
             return Some(PrepareRenameResponse::Range(ts_range_to_lsp_range(
                 typ.identifier_range(),
@@ -45,10 +45,10 @@ pub fn rename(doc: &Document, _pos: Position, node: Node, new_name: &str) -> Opt
     };
 
     // 2. Find the type declaration and all type references to it
-    let declaration = match DeclaredType::from_node(doc, node) {
+    let declaration = match DeclaredType::from_node(node) {
         Some(decl) => decl,
-        None => match ReferencedType::from_node(doc, node) {
-            Some(typ) => typ.resolve_declaration()?,
+        None => match ReferencedType::from_node(node) {
+            Some(typ) => typ.resolve_declaration(doc)?,
             None => return None,
         },
     };
@@ -60,7 +60,7 @@ pub fn rename(doc: &Document, _pos: Position, node: Node, new_name: &str) -> Opt
     }];
 
     // 4. Edit any references to the type
-    for type_reference in declaration.resolve_references() {
+    for type_reference in declaration.resolve_references(doc) {
         edits.push(TextEdit {
             range: ts_range_to_lsp_range(type_reference.identifier_range()),
             new_text: new_name.to_string(),

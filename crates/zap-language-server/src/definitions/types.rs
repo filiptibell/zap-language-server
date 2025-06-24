@@ -16,8 +16,8 @@ pub fn definition(doc: &Document, _pos: Position, node: Node) -> Option<GotoDefi
         _ => node,
     };
 
-    let typ = ReferencedType::from_node(doc, node)?;
-    let decl = typ.resolve_declaration()?;
+    let typ = ReferencedType::from_node(node)?;
+    let decl = typ.resolve_declaration(doc)?;
 
     Some(GotoDefinitionResponse::Scalar(Location {
         uri: doc.url().clone(),

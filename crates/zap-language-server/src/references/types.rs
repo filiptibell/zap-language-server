@@ -16,10 +16,10 @@ pub fn references(doc: &Document, _pos: Position, node: Node) -> Option<Vec<Loca
     };
 
     // 2. Resolve the type declaration
-    let declaration = match DeclaredType::from_node(doc, node) {
+    let declaration = match DeclaredType::from_node(node) {
         Some(decl) => decl,
-        None => match ReferencedType::from_node(doc, node) {
-            Some(typ) => typ.resolve_declaration()?,
+        None => match ReferencedType::from_node(node) {
+            Some(typ) => typ.resolve_declaration(doc)?,
             None => return None,
         },
     };
@@ -27,7 +27,7 @@ pub fn references(doc: &Document, _pos: Position, node: Node) -> Option<Vec<Loca
     // 3. We have a definite declaration, so we can resolve references
     let url = doc.url().clone();
     let locations = declaration
-        .resolve_references()
+        .resolve_references(doc)
         .into_iter()
         .map(|typ| Location {
             uri: url.clone(),

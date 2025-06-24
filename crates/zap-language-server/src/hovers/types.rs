@@ -29,8 +29,8 @@ pub fn hover(doc: &Document, _pos: Position, node: Node) -> Option<Hover> {
             _ => node,
         };
 
-        let typ = ReferencedType::from_node(doc, node)?;
-        let decl = typ.resolve_declaration()?;
+        let typ = ReferencedType::from_node(node)?;
+        let decl = typ.resolve_declaration(doc)?;
 
         // We show an auto-formatted version of the type declaration
         // here to automatically de-indent and make it easier to read
@@ -39,7 +39,7 @@ pub fn hover(doc: &Document, _pos: Position, node: Node) -> Option<Hover> {
 
         let mut formatted = String::new();
         if zap_formatter::format_root(&mut formatted, config, *decl.as_ref()).is_err() {
-            formatted = decl.declaration_text();
+            formatted = decl.declaration_text(doc);
         }
 
         Some(Hover {

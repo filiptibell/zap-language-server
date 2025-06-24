@@ -22,25 +22,23 @@ use crate::utils::is_type_reference;
     ```
 */
 #[derive(Debug, Clone)]
-pub struct ReferencedType<'doc: 'tree, 'tree> {
-    pub(super) document: &'doc Document,
+pub struct ReferencedType<'a> {
     /// `A.B.C`
-    pub(super) reference: Node<'tree>,
+    pub(super) reference: Node<'a>,
     /// `A`, `B`
-    pub(super) namespaces: Vec<Node<'tree>>,
+    pub(super) namespaces: Vec<Node<'a>>,
     /// `C`
-    pub(super) identifier: Node<'tree>,
+    pub(super) identifier: Node<'a>,
 }
 
-impl<'doc: 'tree, 'tree> ReferencedType<'doc, 'tree> {
+impl<'a> ReferencedType<'a> {
     /**
         Constructs a new `ReferencedType` from a given node,
         if the node is a valid type reference.
     */
-    pub fn from_node(doc: &'doc Document, node: Node<'tree>) -> Option<Self> {
+    pub fn from_node(node: Node<'a>) -> Option<Self> {
         if node.kind() == "namespaced_type" {
             Some(Self {
-                document: doc,
                 reference: node,
                 namespaces: node
                     .children_by_field_name("namespace", &mut node.walk())
@@ -49,7 +47,6 @@ impl<'doc: 'tree, 'tree> ReferencedType<'doc, 'tree> {
             })
         } else if is_type_reference(node) {
             Some(Self {
-                document: doc,
                 reference: node,
                 namespaces: Vec::new(),
                 identifier: node,
@@ -63,35 +60,31 @@ impl<'doc: 'tree, 'tree> ReferencedType<'doc, 'tree> {
         Finds all type references in the given document,
         within the given subtree / node.
     */
-    pub fn find_all_in(document: &'doc Document, node: Node<'tree>) -> Vec<Self> {
-        fn recurse<'a: 'b, 'b>(
-            document: &'a Document,
-            current_node: Node<'b>,
-            results: &mut Vec<ReferencedType<'a, 'b>>,
-        ) {
+    pub fn find_all_in(node: Node<'a>) -> Vec<Self> {
+        fn recurse<'b>(current_node: Node<'b>, results: &mut Vec<ReferencedType<'b>>) {
             match current_node.kind() {
                 "namespaced_type" | "identifier" => {
-                    results.extend(ReferencedType::from_node(document, current_node));
+                    results.extend(ReferencedType::from_node(current_node));
                 }
                 _ => {
                     for child in current_node.children(&mut current_node.walk()) {
-                        recurse(document, child, results);
+                        recurse(child, results);
                     }
                 }
             }
         }
 
         let mut results = Vec::new();
-        recurse(document, node, &mut results);
+        recurse(node, &mut results);
         results
     }
 
     /**
         Finds all type references in the given document.
     */
-    pub fn find_all(doc: &'doc Document) -> Vec<Self> {
+    pub fn find_all(doc: &'a Document) -> Vec<Self> {
         doc.node_at_root()
-            .map(|n| Self::find_all_in(doc, n))
+            .map(Self::find_all_in)
             .unwrap_or_default()
     }
 
@@ -105,8 +98,8 @@ impl<'doc: 'tree, 'tree> ReferencedType<'doc, 'tree> {
     /**
         Returns the full node text for this type reference.
     */
-    pub fn reference_text(&self) -> String {
-        self.document.node_text(self.reference)
+    pub fn reference_text(&self, doc: &Document) -> String {
+        doc.node_text(self.reference)
     }
 
     /**
@@ -119,8 +112,8 @@ impl<'doc: 'tree, 'tree> ReferencedType<'doc, 'tree> {
     /**
         Returns the identifier text for this type reference.
     */
-    pub fn identifier_text(&self) -> String {
-        self.document.node_text(self.identifier)
+    pub fn identifier_text(&self, doc: &Document) -> String {
+        doc.node_text(self.identifier)
     }
 
     /**
@@ -134,14 +127,14 @@ impl<'doc: 'tree, 'tree> ReferencedType<'doc, 'tree> {
     /**
         Finds the declaration, if any, for this type reference.
     */
-    pub fn resolve_declaration(&self) -> Option<DeclaredType<'doc, 'tree>> {
+    pub fn resolve_declaration<'d: 'a>(&self, doc: &'d Document) -> Option<DeclaredType<'a>> {
         // 1. First, we must find the correct root namespace to search in
         let mut namespace = find_ancestor(self.reference, is_namespace)?;
 
         // 2. Next, if our type reference contains namespace identifiers,
         //    we should walk all of those, or return None if any is missing
         'outer: for &ident_node in &self.namespaces {
-            let ident_text = self.document.node_text(ident_node);
+            let ident_text = doc.node_text(ident_node);
 
             let mut cursor = namespace.walk();
             for child in namespace.children(&mut cursor) {
@@ -149,7 +142,7 @@ impl<'doc: 'tree, 'tree> ReferencedType<'doc, 'tree> {
                     let name_node = child
                         .child_by_field_name("name")
                         .expect("valid namespace declaration");
-                    let name_text = self.document.node_text(name_node);
+                    let name_text = doc.node_text(name_node);
                     if name_text == ident_text {
                         namespace = child;
                         continue 'outer;
@@ -161,7 +154,7 @@ impl<'doc: 'tree, 'tree> ReferencedType<'doc, 'tree> {
         }
 
         // 3. We should now be in the correct namespace, find the type declaration
-        let ident_referenced = self.identifier_text();
+        let ident_referenced = self.identifier_text(doc);
 
         let mut cursor = namespace.walk();
         for child in namespace.children(&mut cursor) {
@@ -169,9 +162,9 @@ impl<'doc: 'tree, 'tree> ReferencedType<'doc, 'tree> {
                 let name_node = child
                     .child_by_field_name("name")
                     .expect("valid type declaration");
-                let name_text = self.document.node_text(name_node);
+                let name_text = doc.node_text(name_node);
                 if name_text == ident_referenced {
-                    let res = DeclaredType::from_node(self.document, child);
+                    let res = DeclaredType::from_node(child);
                     return res;
                 }
             }
@@ -181,8 +174,8 @@ impl<'doc: 'tree, 'tree> ReferencedType<'doc, 'tree> {
     }
 }
 
-impl<'tree> AsRef<Node<'tree>> for ReferencedType<'_, 'tree> {
-    fn as_ref(&self) -> &Node<'tree> {
+impl<'a> AsRef<Node<'a>> for ReferencedType<'a> {
+    fn as_ref(&self) -> &Node<'a> {
         &self.reference
     }
 }

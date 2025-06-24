@@ -48,10 +48,10 @@ pub fn completion(doc: &Document, pos: Position, node: Node) -> Vec<(CompletionI
         };
 
         items.extend(
-            DeclaredType::find_all_in(doc, nearest_namespace)
+            DeclaredType::find_all_in(nearest_namespace)
                 .into_iter()
                 .filter(|decl| decl.is_in_namespace(nearest_namespace))
-                .map(|decl| (CompletionItemKind::VARIABLE, decl.identifier_text())),
+                .map(|decl| (CompletionItemKind::VARIABLE, decl.identifier_text(doc))),
         );
     }
 
