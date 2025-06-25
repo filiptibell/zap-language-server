@@ -1,6 +1,13 @@
 use async_language_server::{tree_sitter::Node, tree_sitter_utils::find_child};
 
 /**
+    Checks if the given node is a namespace declaration, or the root / source file.
+*/
+pub fn is_namespace(node: Node) -> bool {
+    matches!(node.kind(), "source_file" | "namespace_declaration")
+}
+
+/**
     Checks if the given node is a type, primitive or reference.
 */
 pub fn is_type(node: Node) -> bool {

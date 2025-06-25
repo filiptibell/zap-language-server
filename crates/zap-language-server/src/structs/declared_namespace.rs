@@ -4,7 +4,9 @@ use async_language_server::{
     tree_sitter_utils::find_ancestor,
 };
 
-use super::{ReferencedNamespace, is_namespace};
+use crate::utils::is_namespace;
+
+use super::ReferencedNamespace;
 
 /**
     Represents a declared namespace in a source file tree.

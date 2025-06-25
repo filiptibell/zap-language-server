@@ -4,7 +4,9 @@ use async_language_server::{
     tree_sitter_utils::find_ancestor,
 };
 
-use super::{ReferencedType, is_namespace};
+use crate::utils::is_namespace;
+
+use super::ReferencedType;
 
 /**
     Represents a declared type in a source file tree.

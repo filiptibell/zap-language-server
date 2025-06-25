@@ -4,8 +4,9 @@ use async_language_server::{
     tree_sitter_utils::find_ancestor,
 };
 
-use super::{DeclaredType, is_namespace};
-use crate::utils::is_type_reference;
+use crate::utils::{is_namespace, is_type_reference};
+
+use super::DeclaredType;
 
 /**
     Represents a referenced type in a source file tree.
@@ -125,15 +126,23 @@ impl<'a> ReferencedType<'a> {
     }
 
     /**
-        Finds the declaration, if any, for this type reference.
-    */
-    pub fn resolve_declaration<'d: 'a>(&self, doc: &'d Document) -> Option<DeclaredType<'a>> {
-        // 1. First, we must find the correct root namespace to search in
-        let mut namespace = find_ancestor(self.reference, is_namespace)?;
+        Finds the final namespace, if any, for this type reference.
 
-        // 2. Next, if our type reference contains namespace identifiers,
-        //    we should walk all of those, or return None if any is missing
+        An optional `limit` may be provided to only walk a certain number of namespaces.
+    */
+    pub fn resolve_namespace<'d: 'a>(
+        &self,
+        doc: &'d Document,
+        limit: Option<usize>,
+    ) -> Option<Node<'a>> {
+        let mut namespace = find_ancestor(self.reference, is_namespace)?;
+        let mut current = 0;
+
         'outer: for &ident_node in &self.namespaces {
+            if limit.is_some_and(|l| current >= l) {
+                break;
+            }
+
             let ident_text = doc.node_text(ident_node);
 
             let mut cursor = namespace.walk();
@@ -145,6 +154,7 @@ impl<'a> ReferencedType<'a> {
                     let name_text = doc.node_text(name_node);
                     if name_text == ident_text {
                         namespace = child;
+                        current += 1;
                         continue 'outer;
                     }
                 }
@@ -153,7 +163,15 @@ impl<'a> ReferencedType<'a> {
             return None;
         }
 
-        // 3. We should now be in the correct namespace, find the type declaration
+        Some(namespace)
+    }
+
+    /**
+        Finds the declaration, if any, for this type reference.
+    */
+    pub fn resolve_declaration<'d: 'a>(&self, doc: &'d Document) -> Option<DeclaredType<'a>> {
+        let namespace = self.resolve_namespace(doc, None)?;
+
         let ident_referenced = self.identifier_text(doc);
 
         let mut cursor = namespace.walk();

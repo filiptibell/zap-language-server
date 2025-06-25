@@ -8,7 +8,10 @@ use async_language_server::{
 };
 use zap_language::docs::get_primitive_names;
 
-use crate::{structs::DeclaredType, utils::is_type};
+use crate::{
+    structs::{DeclaredNamespace, DeclaredType},
+    utils::{is_namespace, is_type},
+};
 
 pub fn completion(doc: &Document, pos: Position, node: Node) -> Vec<(CompletionItemKind, String)> {
     // If our current node is a top-level "source file" or "namespace_declaration"
@@ -47,18 +50,21 @@ pub fn completion(doc: &Document, pos: Position, node: Node) -> Vec<(CompletionI
             get_primitive_names().map(|prim| (CompletionItemKind::CLASS, prim.to_string())),
         );
 
-        let Some(nearest_namespace) = find_ancestor(node, |ancestor| {
-            matches!(ancestor.kind(), "source_file" | "namespace_declaration")
-        }) else {
-            return items;
-        };
+        if let Some(nearest_namespace) = find_ancestor(node, is_namespace) {
+            items.extend(
+                DeclaredType::find_all_in(nearest_namespace)
+                    .into_iter()
+                    .filter(|decl| decl.is_in_namespace(nearest_namespace))
+                    .map(|decl| (CompletionItemKind::VARIABLE, decl.identifier_text(doc))),
+            );
 
-        items.extend(
-            DeclaredType::find_all_in(nearest_namespace)
-                .into_iter()
-                .filter(|decl| decl.is_in_namespace(nearest_namespace))
-                .map(|decl| (CompletionItemKind::VARIABLE, decl.identifier_text(doc))),
-        );
+            items.extend(
+                DeclaredNamespace::find_all_in(nearest_namespace)
+                    .into_iter()
+                    .filter(|decl| decl.is_in_namespace(nearest_namespace))
+                    .map(|decl| (CompletionItemKind::MODULE, decl.identifier_text(doc))),
+            );
+        }
     }
 
     items
