@@ -12,7 +12,6 @@ AdvancedDragger
 AirController
 AlignOrientation
 AlignPosition
-AnalysticsSettings
 AnalyticsService
 AngularVelocity
 Animation
@@ -67,6 +66,7 @@ AudioPlayer
 AudioRecorder
 AudioReverb
 AudioSearchParams
+AudioSpeechToText
 AudioTextToSpeech
 AuroraScriptObject
 AvatarAccessoryRules
@@ -249,6 +249,7 @@ ExperienceInviteOptions
 ExperienceNotificationService
 ExperienceService
 ExperienceStateCaptureService
+ExperienceStateRecordingService
 ExplorerFilter
 ExplorerFilterAutocompleter
 ExplorerServiceVisibilityService
@@ -264,8 +265,6 @@ FacialAnimationStreamingSubsessionStats
 FacsImportData
 Feature
 FeatureRestrictionManager
-FeedPages
-FeedService
 File
 FileMesh
 Fire
@@ -296,7 +295,6 @@ GetTextBoundsParams
 GlobalDataStore
 GlobalSettings
 Glue
-GoogleAnalyticsConfiguration
 GroundController
 GroupImportData
 GroupService
@@ -312,6 +310,7 @@ GuiService
 HandleAdornment
 Handles
 HandlesBase
+HandRigDescription
 HapticEffect
 HapticService
 Hat
@@ -393,7 +392,6 @@ MarkerCurve
 MarketplaceService
 MatchmakingService
 MaterialGenerationService
-MaterialGenerationSession
 MaterialImportData
 MaterialService
 MaterialVariant
@@ -414,8 +412,12 @@ MessagingService
 MetaBreakpoint
 MetaBreakpointContext
 MetaBreakpointManager
+MicroProfilerService
 MLModelDeliveryService
+MLService
+MLSession
 Model
+ModerationService
 ModuleScript
 Motor
 Motor6D
@@ -521,6 +523,8 @@ PVInstance
 QWidgetPluginGui
 RayValue
 RbxAnalyticsService
+RecommendationPages
+RecommendationService
 ReflectionMetadata
 ReflectionMetadataCallbacks
 ReflectionMetadataClass
@@ -602,6 +606,7 @@ ServerScriptService
 ServerStorage
 ServiceProvider
 ServiceVisibilityService
+SessionCheckService
 SessionService
 SharedTableRegistry
 Shirt
@@ -611,6 +616,8 @@ SkateboardPlatform
 Skin
 Sky
 SlidingBallConstraint
+SlimContentProvider
+SlimService
 Smoke
 SmoothVoxelsUpgraderService
 Snap
@@ -690,7 +697,11 @@ TemporaryCageMeshProvider
 TemporaryScriptService
 Terrain
 TerrainDetail
+TerrainIterateOperation
+TerrainModifyOperation
+TerrainReadOperation
 TerrainRegion
+TerrainWriteOperation
 TestService
 TextBox
 TextBoxService
@@ -738,6 +749,7 @@ UIAspectRatioConstraint
 UIBase
 UIComponent
 UIConstraint
+UIContainerQuery
 UICorner
 UIDragDetector
 UIDragDetectorService
@@ -772,6 +784,7 @@ VehicleController
 VehicleSeat
 VelocityMotor
 VersionControlService
+VideoCapture
 VideoCaptureService
 VideoDeviceInput
 VideoDisplay

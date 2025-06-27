@@ -1,12 +1,8 @@
-mod definitions;
-
 use std::collections::HashSet;
 
-use definitions::PRIMITIVE_DEFINITIONS;
-
-use self::definitions::{
-    INSTANCE_CLASS_NAMES, KEYWORD_DEFINITIONS, OPTION_DEFINITIONS, PROPERTY_DEFINITIONS,
-    VARIANT_DEFINITIONS,
+use crate::constants::{
+    INSTANCE_CLASS_NAMES, KEYWORD_DEFINITIONS, OPTION_DEFINITIONS, PRIMITIVE_DEFINITIONS,
+    PROPERTY_DEFINITIONS, VARIANT_DEFINITIONS,
 };
 
 pub fn get_option_names() -> impl Iterator<Item = &'static str> {

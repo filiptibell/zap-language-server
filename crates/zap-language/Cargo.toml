@@ -11,6 +11,9 @@ path = "src/lib.rs"
 [lints]
 workspace = true
 
+[dependencies]
+zap-documentation = { path = "../zap-documentation" }
+
 [dependencies.tree-sitter]
 version = "0.25"
 

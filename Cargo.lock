@@ -1425,6 +1425,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "zap-documentation"
+version = "0.2.2"
+
+[[package]]
 name = "zap-formatter"
 version = "0.2.2"
 dependencies = [
@@ -1438,6 +1442,7 @@ version = "0.2.2"
 dependencies = [
  "tree-sitter",
  "tree-sitter-zap",
+ "zap-documentation",
 ]
 
 [[package]]

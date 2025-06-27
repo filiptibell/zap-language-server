@@ -2,6 +2,7 @@
 resolver = "2"
 default-members = ["crates/zap-language-server"]
 members = [
+	"crates/zap-documentation",
 	"crates/zap-language",
 	"crates/zap-formatter",
 	"crates/zap-language-server",

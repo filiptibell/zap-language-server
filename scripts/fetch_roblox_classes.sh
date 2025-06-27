@@ -3,7 +3,7 @@
 set -euo pipefail
 
 URL="https://raw.githubusercontent.com/MaximumADHD/Roblox-Client-Tracker/refs/heads/roblox/API-Dump.json"
-OUTPUT_FILE="crates/zap-language-server/src/docs/definitions/instances.txt"
+OUTPUT_FILE="crates/zap-documentation/docs/generated/instance_classes.txt"
 
 if ! command -v jq &> /dev/null; then
     echo "jq is not installed"

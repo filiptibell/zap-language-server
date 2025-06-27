@@ -1,0 +1,12 @@
+[package]
+name = "zap-documentation"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+
+[lib]
+name = "zap_documentation"
+path = "src/lib.rs"
+
+[lints]
+workspace = true
