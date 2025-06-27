@@ -4,12 +4,14 @@ use async_language_server::{
     tree_sitter::Node,
     tree_sitter_utils::{find_child, ts_range_contains_lsp_position},
 };
-use zap_language::docs::find_variants;
+use zap_language::{docs::find_variants, tree_sitter_utils::is_field_node};
+
+use crate::utils::is_namespace;
 
 pub fn completion(_doc: &Document, pos: Position, node: Node) -> Vec<(CompletionItemKind, String)> {
-    // If our current node is a top-level "source file" or "namespace_declaration"
-    // we can probably drill down to something a bit more specific & useful
-    let node = if matches!(node.kind(), "source_file" | "namespace_declaration") {
+    // If our current node is a top-level, we can probably
+    // find something that is a bit more specific & useful
+    let node = if is_namespace(node) {
         find_child(node, |c| {
             ts_range_contains_lsp_position(c.range(), pos)
                 && matches!(c.kind(), "event_declaration" | "function_declaration")
@@ -21,7 +23,7 @@ pub fn completion(_doc: &Document, pos: Position, node: Node) -> Vec<(Completion
 
     // Try to find the field node
     let node = find_child(node, |d| {
-        ts_range_contains_lsp_position(d.range(), pos) && is_property_field(d)
+        ts_range_contains_lsp_position(d.range(), pos) && is_field_node(d)
     })
     .unwrap_or(node);
 
@@ -29,7 +31,7 @@ pub fn completion(_doc: &Document, pos: Position, node: Node) -> Vec<(Completion
     let node = node.child_by_field_name("value").unwrap_or(node);
 
     // We should now be inside the value node, and have field as parent
-    let Some(parent) = node.parent().filter(|n| is_property_field(*n)) else {
+    let Some(parent) = node.parent().filter(|n| is_field_node(*n)) else {
         return Vec::new();
     };
 
@@ -44,14 +46,4 @@ pub fn completion(_doc: &Document, pos: Position, node: Node) -> Vec<(Completion
     }
 
     items
-}
-
-fn is_property_field(node: Node) -> bool {
-    let kind = node.kind();
-
-    let is_event = kind.starts_with("event_");
-    let is_funct = kind.starts_with("function_");
-    let is_field = kind.ends_with("_field");
-
-    (is_event || is_funct) && is_field
 }

@@ -70,6 +70,28 @@ pub fn is_ident_node(node: Node) -> bool {
 }
 
 #[must_use]
+pub fn is_field_node(node: Node) -> bool {
+    let kind = node.kind();
+
+    let is_event = kind.starts_with("event_");
+    let is_funct = kind.starts_with("function_");
+    let is_field = kind.ends_with("_field");
+
+    (is_event || is_funct) && is_field
+}
+
+#[must_use]
+pub fn is_field_value_node(node: Node) -> bool {
+    let kind = node.kind();
+
+    let is_event = kind.starts_with("event_");
+    let is_funct = kind.starts_with("function_");
+    let is_value = kind.ends_with("_value");
+
+    (is_event || is_funct) && is_value
+}
+
+#[must_use]
 pub fn is_punctuation(c: char) -> bool {
     matches!(c, '(' | ')' | '[' | ']' | '{' | '}' | ':' | ',' | '.')
 }
@@ -82,6 +104,11 @@ pub fn is_punctuation_str(s: impl AsRef<str>) -> bool {
 #[must_use]
 pub fn is_punctuation_node(node: Node) -> bool {
     is_punctuation_str(node.kind())
+}
+
+#[must_use]
+pub fn is_atom(node: Node) -> bool {
+    node.child_count() == 0
 }
 
 #[must_use]
@@ -98,6 +125,12 @@ pub fn is_type_empty(node: Node, skip: Option<usize>) -> bool {
     true
 }
 
+/**
+    An iterator over **all** descendant nodes, in depth-first (positional) order.
+
+    Includes both top-level items such as `namespace_declaration`, `type_declaration`,
+    and others, as well as atoms such as punctuation, and plain text.
+*/
 #[derive(Debug, Clone)]
 pub struct DepthFirstNodeIterator<'a> {
     queue: Vec<Node<'a>>,
@@ -132,5 +165,39 @@ impl<'a> Iterator for DepthFirstNodeIterator<'a> {
         } else {
             None
         }
+    }
+}
+
+/**
+    An iterator over **atoms**, in depth-first (positional) order.
+
+    Does *not* include top-level items such as `namespace_declaration`,
+    `type_declaration`, only atoms such as punctuation, and plain text.
+*/
+#[derive(Debug, Clone)]
+pub struct AtomIterator<'a> {
+    inner: DepthFirstNodeIterator<'a>,
+}
+
+impl<'a> AtomIterator<'a> {
+    #[must_use]
+    pub fn new(root: Node<'a>) -> Self {
+        Self::from(root)
+    }
+}
+
+impl<'a> From<Node<'a>> for AtomIterator<'a> {
+    fn from(root: Node<'a>) -> Self {
+        Self {
+            inner: DepthFirstNodeIterator::from(root),
+        }
+    }
+}
+
+impl<'a> Iterator for AtomIterator<'a> {
+    type Item = Node<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.by_ref().find(|&node| is_atom(node))
     }
 }

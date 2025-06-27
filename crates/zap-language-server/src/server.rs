@@ -14,7 +14,7 @@ use zap_formatter::Config;
 use crate::{
     completions::{
         completion_for_instances, completion_for_keywords, completion_for_namespaces,
-        completion_for_options, completion_for_properties, completion_for_types,
+        completion_for_options, completion_for_properties, completion_for_types, completion_pos,
         completion_trigger_characters,
     },
     definitions::{definition_for_namespaces, definition_for_types},
@@ -110,6 +110,9 @@ impl Server for ZapLanguageServer {
         let Some(doc) = state.document(&url) else {
             return Ok(None);
         };
+
+        let pos = completion_pos(&doc, pos);
+
         let Some(node) = doc.node_at_position_named(pos) else {
             tracing::debug!(
                 "Missing node for completion at {}:{}",

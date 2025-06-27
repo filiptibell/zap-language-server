@@ -14,9 +14,9 @@ use crate::{
 };
 
 pub fn completion(doc: &Document, pos: Position, node: Node) -> Vec<(CompletionItemKind, String)> {
-    // If our current node is a top-level "source file" or "namespace_declaration"
-    // we can probably drill down to something a bit more specific & useful
-    let node = if matches!(node.kind(), "source_file" | "namespace_declaration") {
+    // If our current node is a top-level, we can probably
+    // find something that is a bit more specific & useful
+    let node = if is_namespace(node) {
         find_child(node, |c| {
             ts_range_contains_lsp_position(c.range(), pos) && c.kind() == "type_declaration"
         })

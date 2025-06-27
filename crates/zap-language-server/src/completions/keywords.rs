@@ -5,12 +5,14 @@ use async_language_server::{
     tree_sitter_utils::{find_child, ts_range_contains_lsp_position},
 };
 
+use crate::utils::is_namespace;
+
 const KEYWORDS: [&str; 5] = ["type", "opt", "event", "funct", "namespace"];
 
 pub fn completion(_doc: &Document, pos: Position, node: Node) -> Vec<(CompletionItemKind, String)> {
-    // If our current node is a top-level "source file" or "namespace_declaration"
-    // we can probably drill down to something a bit more specific & useful
-    let node = if matches!(node.kind(), "source_file" | "namespace_declaration") {
+    // If our current node is a top-level, we can probably
+    // find something that is a bit more specific & useful
+    let node = if is_namespace(node) {
         find_child(node, |c| {
             let is_ident = c.kind() == "identifier";
             let is_inside = ts_range_contains_lsp_position(c.range(), pos);
@@ -32,9 +34,7 @@ pub fn completion(_doc: &Document, pos: Position, node: Node) -> Vec<(Completion
         return items;
     };
 
-    if node.kind() == "identifier"
-        && matches!(parent.kind(), "source_file" | "namespace_declaration")
-    {
+    if node.kind() == "identifier" && is_namespace(parent) {
         // We are currently typing some kind of identifier inside either
         // a namespace or the top level of the file, without anything
         // else, so assume its a start of a new declaration
