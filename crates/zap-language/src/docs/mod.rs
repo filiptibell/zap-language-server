@@ -1,5 +1,7 @@
 mod definitions;
 
+use std::collections::HashSet;
+
 use definitions::PRIMITIVE_DEFINITIONS;
 
 use self::definitions::{
@@ -9,6 +11,17 @@ use self::definitions::{
 
 pub fn get_option_names() -> impl Iterator<Item = &'static str> {
     OPTION_DEFINITIONS.iter().map(|(name, _, _)| *name)
+}
+
+pub fn get_property_names() -> impl Iterator<Item = &'static str> {
+    let mut seen = HashSet::new();
+    PROPERTY_DEFINITIONS.iter().filter_map(move |(name, _, _)| {
+        let name: &'static str = name
+            .trim_start_matches("event_")
+            .trim_start_matches("function_")
+            .trim_end_matches("_field");
+        if seen.insert(name) { Some(name) } else { None }
+    })
 }
 
 pub fn get_primitive_names() -> impl Iterator<Item = &'static str> {

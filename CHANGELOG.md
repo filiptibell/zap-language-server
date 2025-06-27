@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added basic support for completions of property names such as `from`, `type`, `data`,
+  and all other valid property names, inside of event and function declarations
+
 ### Changed
 
 - Completions now trigger in more relevant locations
