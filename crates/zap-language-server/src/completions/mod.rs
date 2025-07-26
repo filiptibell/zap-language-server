@@ -4,18 +4,18 @@ use async_language_server::{
 };
 use zap_language::tree_sitter_utils::AtomIterator;
 
-mod instances;
 mod keywords;
 mod namespaces;
 mod options;
 mod properties;
+mod specifiers;
 mod types;
 
-pub use self::instances::completion as completion_for_instances;
 pub use self::keywords::completion as completion_for_keywords;
 pub use self::namespaces::completion as completion_for_namespaces;
 pub use self::options::completion as completion_for_options;
 pub use self::properties::completion as completion_for_properties;
+pub use self::specifiers::completion as completion_for_specifiers;
 pub use self::types::completion as completion_for_types;
 
 pub fn completion_trigger_characters() -> Vec<String> {
@@ -26,6 +26,7 @@ pub fn completion_trigger_characters() -> Vec<String> {
         String::from("@"),
         String::from(":"),
         String::from("."),
+        String::from("("),
         String::from("-"),
         String::from("_"),
         String::from(" "),

@@ -13,8 +13,8 @@ use zap_formatter::Config;
 
 use crate::{
     completions::{
-        completion_for_instances, completion_for_keywords, completion_for_namespaces,
-        completion_for_options, completion_for_properties, completion_for_types, completion_pos,
+        completion_for_keywords, completion_for_namespaces, completion_for_options,
+        completion_for_properties, completion_for_specifiers, completion_for_types, completion_pos,
         completion_trigger_characters,
     },
     definitions::{definition_for_namespaces, definition_for_types},
@@ -128,13 +128,29 @@ impl Server for ZapLanguageServer {
             pos.character
         );
 
+        /*
+            NOTE: Specifier and namespace completions are mutually exclusive
+            with all other completions, so if we have either of those, we should
+            not try to call any other completion functions. Here's an example:
+
+            ```zap
+            type Part = Instance.|
+            ```
+
+            Where the "|" character is the cursor. The only valid completion
+            in this position is for a specifier. Namespaces are very similar.
+        */
         let mut items = Vec::new();
-        items.extend(completion_for_keywords(&doc, pos, node));
-        items.extend(completion_for_types(&doc, pos, node));
-        items.extend(completion_for_namespaces(&doc, pos, node));
-        items.extend(completion_for_instances(&doc, pos, node));
-        items.extend(completion_for_properties(&doc, pos, node));
-        items.extend(completion_for_options(&doc, pos, node).await);
+        items.extend(completion_for_specifiers(&doc, pos, node));
+        if items.is_empty() {
+            items.extend(completion_for_namespaces(&doc, pos, node));
+            if items.is_empty() {
+                items.extend(completion_for_keywords(&doc, pos, node));
+                items.extend(completion_for_types(&doc, pos, node));
+                items.extend(completion_for_properties(&doc, pos, node));
+                items.extend(completion_for_options(&doc, pos, node).await);
+            }
+        }
 
         if items.is_empty() {
             Ok(None)

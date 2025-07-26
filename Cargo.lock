@@ -230,15 +230,15 @@ checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
 name = "console"
-version = "0.15.11"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "054ccb5b10f9f2cbf51eb355ca1d05c2d279ce1804688d0db74b4733a5aeafd8"
+checksum = "2e09ced7ebbccb63b4c65413d821f2e00ce54c5ca4514ddc6b3c892fdbcbc69d"
 dependencies = [
  "encode_unicode",
  "libc",
  "once_cell",
  "unicode-width",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -1153,7 +1153,7 @@ checksum = "c4013970217383f67b18aef68f6fb2e8d409bc5755227092d32efb0422ba24b8"
 [[package]]
 name = "tree-sitter-zap"
 version = "0.1.0"
-source = "git+https://github.com/filiptibell/tree-sitter-zap?rev=d7ea48f7ea6050eb67b1c7d28ab12672c9bcc1a2#d7ea48f7ea6050eb67b1c7d28ab12672c9bcc1a2"
+source = "git+https://github.com/filiptibell/tree-sitter-zap?rev=d61ffd523ade7b0a62a2645f31bf1c5a49d30a2c#d61ffd523ade7b0a62a2645f31bf1c5a49d30a2c"
 dependencies = [
  "cc",
  "tree-sitter-language",

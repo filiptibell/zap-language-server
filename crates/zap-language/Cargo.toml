@@ -19,4 +19,4 @@ version = "0.25"
 
 [dependencies.tree-sitter-zap]
 git = "https://github.com/filiptibell/tree-sitter-zap"
-rev = "d7ea48f7ea6050eb67b1c7d28ab12672c9bcc1a2"
+rev = "d61ffd523ade7b0a62a2645f31bf1c5a49d30a2c"
