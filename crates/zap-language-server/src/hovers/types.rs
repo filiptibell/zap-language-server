@@ -2,16 +2,21 @@ use async_language_server::{
     lsp_types::{Hover, HoverContents, MarkedString, Position},
     server::Document,
     tree_sitter::Node,
-    tree_sitter_utils::ts_range_to_lsp_range,
+    tree_sitter_utils::{find_ancestor, ts_range_to_lsp_range},
 };
 use zap_language::docs::find_primitive;
 
-use crate::structs::ReferencedType;
+use crate::{structs::ReferencedType, utils::is_type_primitive};
 
 pub fn hover(doc: &Document, _pos: Position, node: Node) -> Option<Hover> {
+    // If we are inside a descendant node of a primitive
+    // type, we should traverse up to the main type node
+    let node = find_ancestor(node, |a| is_type_primitive(a)).unwrap_or(node);
+
     if matches!(node.kind(), "primitive_type") {
         // Primitive type such as `u32`, `string`, etc
-        let text = doc.text().byte_slice(node.byte_range());
+        let child = node.child(0)?;
+        let text = doc.text().byte_slice(child.byte_range());
         let (_, header, desc) = find_primitive([text])?;
 
         Some(Hover {
