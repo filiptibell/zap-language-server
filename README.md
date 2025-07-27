@@ -21,6 +21,7 @@ Full editor support for [Zap](https://zap.redblox.dev), providing syntax highlig
 
 Also supports the following features using the [LSP](https://microsoft.github.io/language-server-protocol/) (Language Server Protocol):
 
+- 🧐 Diagnostics for all the same errors, warnings, and hints as the Zap CLI
 - 🔮 Information on hover for keywords, primitive types, and user-defined types
 - 🪄 Completion for keywords, primitive types, and user-defined types
 - 🎯 Go to definition & renaming for user-defined types
@@ -42,11 +43,11 @@ Extensions can also be built and installed from source:
 1. [Install Bun](https://bun.sh/docs/installation)
 2. Clone this repository, and navigate to the `editors/vscode` directory
 3. Build and install the extension by running these three commands, in order:
-   ```bash
-   bun install
-   bun pm trust --all
-   bun run extension-install
-   ```
+    ```bash
+    bun install
+    bun pm trust --all
+    bun run extension-install
+    ```
 
 </details>
 

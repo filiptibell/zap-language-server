@@ -1257,7 +1257,7 @@ version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a43bddab41f8626c7bdaab872bbba75f8df5847b516d77c569c746e2ae5eb746"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -1814,11 +1814,11 @@ dependencies = [
 
 [[package]]
 name = "zap-documentation"
-version = "0.2.3"
+version = "1.0.0"
 
 [[package]]
 name = "zap-formatter"
-version = "0.2.3"
+version = "1.0.0"
 dependencies = [
  "thiserror",
  "zap-language",
@@ -1826,7 +1826,7 @@ dependencies = [
 
 [[package]]
 name = "zap-language"
-version = "0.2.3"
+version = "1.0.0"
 dependencies = [
  "codespan-reporting",
  "lalrpop-util",
@@ -1838,7 +1838,7 @@ dependencies = [
 
 [[package]]
 name = "zap-language-server"
-version = "0.2.3"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "async-language-server",
