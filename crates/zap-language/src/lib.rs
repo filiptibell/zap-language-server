@@ -1,4 +1,5 @@
 pub mod constants;
+pub mod diagnostics;
 pub mod docs;
 pub mod tree_sitter_utils;
 

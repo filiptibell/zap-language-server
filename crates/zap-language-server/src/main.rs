@@ -1,6 +1,7 @@
 mod cli;
 mod completions;
 mod definitions;
+mod diagnostics;
 mod hovers;
 mod references;
 mod renames;

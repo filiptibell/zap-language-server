@@ -12,6 +12,9 @@ path = "src/lib.rs"
 workspace = true
 
 [dependencies]
+codespan-reporting = "0.12.0"
+lalrpop-util = { version = "0.22.2", features = ["lexer"] } # Fix zap lib not building without lexer feature
+
 zap-documentation = { path = "../zap-documentation" }
 
 [dependencies.tree-sitter]
@@ -20,3 +23,8 @@ version = "0.25"
 [dependencies.tree-sitter-zap]
 git = "https://github.com/filiptibell/tree-sitter-zap"
 rev = "d61ffd523ade7b0a62a2645f31bf1c5a49d30a2c"
+
+[dependencies.libzap]
+package = "zap"
+git = "https://github.com/red-blox/zap"
+rev = "aea826c5d4e5d30ae03434375ba811d308025158"

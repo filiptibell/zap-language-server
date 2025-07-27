@@ -1,10 +1,13 @@
 use async_language_server::{
     lsp_types::{
         ClientCapabilities, CompletionItem, CompletionOptions, CompletionParams,
-        CompletionResponse, DocumentFormattingParams, GotoDefinitionParams, GotoDefinitionResponse,
-        Hover, HoverParams, HoverProviderCapability, Location, OneOf, PrepareRenameResponse,
-        ReferenceParams, RenameOptions, RenameParams, ServerCapabilities, ServerInfo,
-        TextDocumentPositionParams, TextEdit, WorkDoneProgressOptions, WorkspaceEdit,
+        CompletionResponse, DiagnosticOptions, DiagnosticServerCapabilities,
+        DocumentDiagnosticParams, DocumentDiagnosticReport, DocumentDiagnosticReportResult,
+        DocumentFormattingParams, FullDocumentDiagnosticReport, GotoDefinitionParams,
+        GotoDefinitionResponse, Hover, HoverParams, HoverProviderCapability, Location, OneOf,
+        PrepareRenameResponse, ReferenceParams, RelatedFullDocumentDiagnosticReport, RenameOptions,
+        RenameParams, ServerCapabilities, ServerInfo, TextDocumentPositionParams, TextEdit,
+        WorkDoneProgressOptions, WorkspaceEdit,
     },
     server::{DocumentMatcher, Server, ServerError, ServerResult, ServerState},
     tree_sitter_utils::ts_range_to_lsp_range,
@@ -18,6 +21,7 @@ use crate::{
         completion_trigger_characters,
     },
     definitions::{definition_for_namespaces, definition_for_types},
+    diagnostics::zap_diagnostic_to_lsp_diagnostic,
     hovers::{hover_for_keywords, hover_for_options, hover_for_properties, hover_for_types},
     references::{references_for_namespaces, references_for_types},
     renames::{
@@ -66,6 +70,11 @@ impl Server for ZapLanguageServer {
                 ..Default::default()
             }),
             document_formatting_provider: Some(OneOf::Left(true)),
+            diagnostic_provider: Some(DiagnosticServerCapabilities::Options(DiagnosticOptions {
+                inter_file_dependencies: false,
+                workspace_diagnostics: false,
+                ..Default::default()
+            })),
             ..Default::default()
         })
     }
@@ -298,5 +307,33 @@ impl Server for ZapLanguageServer {
 
         let range = ts_range_to_lsp_range(root.range());
         Ok(Some(vec![TextEdit { range, new_text }]))
+    }
+
+    async fn document_diagnostics(
+        &self,
+        state: ServerState,
+        params: DocumentDiagnosticParams,
+    ) -> ServerResult<DocumentDiagnosticReportResult> {
+        let items = match state.document(&params.text_document.uri) {
+            Some(doc) => {
+                let contents = doc.text_contents();
+                let parsed = zap_language::diagnostics::parse(&contents);
+                parsed
+                    .into_iter()
+                    .filter_map(|diag| zap_diagnostic_to_lsp_diagnostic(&doc, diag))
+                    .collect::<Vec<_>>()
+            }
+            None => Vec::new(),
+        };
+
+        Ok(DocumentDiagnosticReportResult::Report(
+            DocumentDiagnosticReport::Full(RelatedFullDocumentDiagnosticReport {
+                related_documents: None,
+                full_document_diagnostic_report: FullDocumentDiagnosticReport {
+                    result_id: None,
+                    items,
+                },
+            }),
+        ))
     }
 }
